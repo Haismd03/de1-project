@@ -1,3 +1,10 @@
+## -------------------------
+# exclude everything in vivado folder, except readme
+vivado_project/*
+!vivado_project/README.md
+
+## ----------------------------
+# exclude every possible vivado file if somebody fucks up creating project (except sources)
 # gitignore template for Xilinx Vivado Design Suite
 # website: https://www.xilinx.com/support/download.html
 
@@ -26,6 +33,7 @@
 *_funcsim.v
 *_funcsim.vhdl
 .project
+.xpr
 
 # [dir]
 *.cache
