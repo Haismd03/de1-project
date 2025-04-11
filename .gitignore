@@ -1,0 +1,41 @@
+# Vivado-generated junk
+*.jou
+*.log
+*.str
+*.webtalk
+*.wdb
+*.wcfg
+*.rpt
+*.pb
+*.db
+*.backup.*
+
+# Auto-generated folders
+.cache/
+.hw/
+.ip_user_files/
+.sim/
+.xgui/
+*.runs/
+*.gen/
+*.Xil/
+
+# Simulation output
+*.wdb
+*.vcd
+*.vpd
+*.wlf
+
+# User-specific settings
+*.xpr.user
+
+# OS and editor stuff
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.tmp
+*.bak
+
+# TerosHDL
+.teroshdl/
