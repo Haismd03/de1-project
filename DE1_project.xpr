@@ -60,7 +60,11 @@
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSABoardId" Val="nexys-a7-50t"/>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <Option Name="WTXSimLaunchSim" Val="19"/>
+=======
+    <Option Name="WTXSimLaunchSim" Val="15"/>
+>>>>>>> 87b9d900ff3982d6afc4d10fe1158c495b9c6ddd
 =======
     <Option Name="WTXSimLaunchSim" Val="15"/>
 >>>>>>> 87b9d900ff3982d6afc4d10fe1158c495b9c6ddd
