@@ -63,11 +63,12 @@ architecture Behavioral of ADT7420_driver is
     -- register map
     constant TEMP_REGISTER : std_logic_vector(7 downto 0) := x"00";
 
-    type state_t is ( RESET_STATE , REQUEST_TEMP_STATE, CONVERT_TEMP_STATE );
-    signal state : state_t;
+    type state_t is (RESET_STATE, WAIT_FOR_START_STATE, REQUEST_TEMP_STATE, CONVERT_TEMP_STATE);
+    signal state : state_t := RESET_STATE;
 
 begin
     p_adt7420_driver : process (clk) is
+    variable temp_temperature : integer := 0;
     begin
         if(rising_edge(clk)) then
             if (rst = '1') then
@@ -79,16 +80,27 @@ begin
                         read_write <= RESET_LOGIC;
                         register_address <= (others => RESET_LOGIC);
                         num_bytes <= RESET_INT;
+                        done_read <= RESET_LOGIC;
+                        
                         temperature <= RESET_INT;
+                        
+                        -- next state
+                        state <= WAIT_FOR_START_STATE;
+                        
+                    when WAIT_FOR_START_STATE =>
+                        address <= (others => RESET_LOGIC);
+                        read_write <= RESET_LOGIC;
+                        register_address <= (others => RESET_LOGIC);
+                        num_bytes <= RESET_INT;
                         done_read <= RESET_LOGIC;
                         
                         -- next state
                         if (start = '1') then
                             state <= REQUEST_TEMP_STATE;
-                        end if;
+                        end if;                   
                         
                     when REQUEST_TEMP_STATE =>
-                        address <= x"4B"; -- I2C address
+                        address <= std_logic_vector(to_unsigned(16#4B#, 7)); -- I2C address
                         read_write <= READ;
                         register_address <= TEMP_REGISTER;
                         num_bytes <= 2;
@@ -99,11 +111,16 @@ begin
                         end if;
                         
                     when CONVERT_TEMP_STATE =>
-                        temperature <= to_integer(signed(response_in(15 downto 3))) * 625 / 10;
+                        temp_temperature := to_integer(signed(response_in(15 downto 3))) * 625;
+                        
+                        if (temp_temperature <= 800000 and temp_temperature >= -400000) then
+                            temperature <= temp_temperature;
+                        end if;  
+                        
                         done_read <= '1';
                         
                         -- next state
-                        state <= RESET_STATE;
+                        state <= WAIT_FOR_START_STATE;
                 end case;
             end if; 
         end if;                       
