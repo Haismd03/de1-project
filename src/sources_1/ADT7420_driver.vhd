@@ -73,56 +73,56 @@ begin
         if(rising_edge(clk)) then
             if (rst = '1') then
                 state <= RESET_STATE;
-            else
-                case state is
-                    when RESET_STATE => -- reset
-                        address <= (others => RESET_LOGIC);
-                        read_write <= RESET_LOGIC;
-                        register_address <= (others => RESET_LOGIC);
-                        num_bytes <= RESET_INT;
-                        done_read <= RESET_LOGIC;
-                        
-                        temperature <= RESET_INT;
-                        
-                        -- next state
-                        state <= WAIT_FOR_START_STATE;
-                        
-                    when WAIT_FOR_START_STATE =>
-                        address <= (others => RESET_LOGIC);
-                        read_write <= RESET_LOGIC;
-                        register_address <= (others => RESET_LOGIC);
-                        num_bytes <= RESET_INT;
-                        done_read <= RESET_LOGIC;
-                        
-                        -- next state
-                        if (start = '1') then
-                            state <= REQUEST_TEMP_STATE;
-                        end if;                   
-                        
-                    when REQUEST_TEMP_STATE =>
-                        address <= std_logic_vector(to_unsigned(16#4B#, 7)); -- I2C address
-                        read_write <= READ;
-                        register_address <= TEMP_REGISTER;
-                        num_bytes <= 2;
-                        
-                        -- next state
-                        if (done_request = '1') then
-                            state <= CONVERT_TEMP_STATE;
-                        end if;
-                        
-                    when CONVERT_TEMP_STATE =>
-                        temp_temperature := to_integer(signed(response_in(15 downto 3))) * 625;
-                        
-                        if (temp_temperature <= 800000 and temp_temperature >= -400000) then
-                            temperature <= temp_temperature;
-                        end if;  
-                        
-                        done_read <= '1';
-                        
-                        -- next state
-                        state <= WAIT_FOR_START_STATE;
-                end case;
-            end if; 
+            end if;
+            
+            case state is
+                when RESET_STATE => -- reset
+                    address <= (others => RESET_LOGIC);
+                    read_write <= RESET_LOGIC;
+                    register_address <= (others => RESET_LOGIC);
+                    num_bytes <= RESET_INT;
+                    done_read <= RESET_LOGIC;
+                    
+                    temperature <= RESET_INT;
+                    
+                    -- next state
+                    state <= WAIT_FOR_START_STATE;
+                    
+                when WAIT_FOR_START_STATE =>
+                    address <= (others => RESET_LOGIC);
+                    read_write <= RESET_LOGIC;
+                    register_address <= (others => RESET_LOGIC);
+                    num_bytes <= RESET_INT;
+                    done_read <= RESET_LOGIC;
+                    
+                    -- next state
+                    if (start = '1') then
+                        state <= REQUEST_TEMP_STATE;
+                    end if;                   
+                    
+                when REQUEST_TEMP_STATE =>
+                    address <= std_logic_vector(to_unsigned(16#4B#, 7)); -- I2C address
+                    read_write <= READ;
+                    register_address <= TEMP_REGISTER;
+                    num_bytes <= 2;
+                    
+                    -- next state
+                    if (done_request = '1') then
+                        state <= CONVERT_TEMP_STATE;
+                    end if;
+                    
+                when CONVERT_TEMP_STATE =>
+                    temp_temperature := to_integer(signed(response_in(15 downto 3))) * 625 / 10; -- 0.0625
+                    
+                    if (temp_temperature <= 80000 and temp_temperature >= -40000) then
+                        temperature <= temp_temperature;
+                    end if;  
+                    
+                    done_read <= '1';
+                    
+                    -- next state
+                    state <= WAIT_FOR_START_STATE;
+            end case;
         end if;                       
     end process p_adt7420_driver;              
 end architecture Behavioral;

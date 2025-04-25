@@ -38,7 +38,7 @@ architecture tb of tb_ADT7420_driver is
     signal temperature      : integer;
     signal done_read        : std_logic;
 
-    constant TbPeriod : time := 10 ns; -- ***EDIT*** Put right period here
+    constant TbPeriod : time := 2.5 us; -- ***EDIT*** Put right period here
     signal TbClock : std_logic := '0';
     signal TbSimEnded : std_logic := '0';
 
@@ -73,26 +73,26 @@ begin
         -- Reset generation
         -- ***EDIT*** Check that rst is really your reset signal
         rst <= '1';
-        wait for 100 ns;
+        wait for 2*TbPeriod;
         rst <= '0';
-        wait for 100 ns;
+        wait for 2*TbPeriod;
         
         -- Start generation
         start <= '1';
-        wait for 100 ns;
+        wait for 2*TbPeriod;
         start <= '0';
-        wait for 1000 ns;
+        wait for 10*TbPeriod;
         
         -- SImulate response of I2C driver
         response_in <= std_logic_vector(to_unsigned(16#C80#, 16)); -- x"190" [15:3] expanded with 0 [2:0] to match 16 bits
         done_request <= '1';
-        wait for 1000 ns;
+        wait for 10*TbPeriod;
         
         done_request <= '0';
         
         
         -- ***EDIT*** Add stimuli here
-        wait for 100 * TbPeriod;
+        wait for 1000 * TbPeriod;
 
         -- Stop the clock and hence terminate the simulation
         TbSimEnded <= '1';
