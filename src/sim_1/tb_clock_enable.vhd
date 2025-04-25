@@ -11,7 +11,7 @@ end entity tb_clock_enable;
 architecture tb of tb_clock_enable is
     component clock_enable is
         generic (
-            N_PERIODS : integer
+            N_FREQ : integer
         );
         port (
             clk   : in    std_logic;
@@ -31,7 +31,7 @@ begin
 
     dut : component clock_enable
         generic map (
-            N_PERIODS => 250
+            N_FREQ => 400000
         )
         port map (
             clk   => clk,
