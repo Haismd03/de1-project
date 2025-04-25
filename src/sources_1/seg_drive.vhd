@@ -30,7 +30,6 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity seg_drive is
     Port ( clk : in STD_LOGIC;
-           en : in STD_LOGIC;
            rst : in STD_LOGIC;
            inp : in INTEGER;
            seg : out STD_LOGIC_VECTOR (6 downto 0);
@@ -39,24 +38,34 @@ entity seg_drive is
 end seg_drive;
 
 architecture Behavioral of seg_drive is
-    signal state : integer range 1 to 6  := 1;
+    signal state : integer range 0 to 6  := 0;
 
     signal num : integer;
 begin
     process(clk)
-        variable val : integer := 0; 
+        variable val : integer range 0 to 9 := 0; 
+        variable temp : integer;
         begin
             if (rising_edge(clk)) then
                 if (rst = '1') then
                     seg <= "1111111";
                     dp  <= '1';
                     an <= "00000000";
-                elsif en='1' then
+                else
                     case state is
+                        when 0 =>
+                            an <= "10111111";
+                            dp <= '1';
+                            temp := inp;
+                            if temp < 0 then
+                                seg <= "1111110";
+                                temp := -temp;
+                            end if;
+                            num <= temp; 
+                            state <= 1;
                         when 1 =>
                             an <= "11111110";
                             dp <= '1';
-                            num <= inp;
                             state <= 2;
                         when 2 =>
                             an <= "11111101";
@@ -77,32 +86,34 @@ begin
                         when 6 =>
                             an <= "11011111";
                             dp <= '1';
-                            state <= 1;
+                            state <= 0;
                     end case;
-                    val := num mod (10**state);
-                    num <= num-val;
-                    case val is
-                          when 0 =>
-                            seg <= "0000001";
-                          when 1 =>
-                            seg <= "1001111";                    
-                          when 2 =>
-                            seg <= "0010010";
-                          when 3 =>
-                            seg <= "0000110";
-                          when 4 =>
-                            seg <= "1001100";
-                          when 5 =>
-                            seg <= "0100100";
-                          when 6 =>
-                            seg <= "0100000";
-                          when 7 =>
-                            seg <= "0001111";
-                          when 8 =>
-                            seg <= "0000000";
-                          when 9 =>
-                            seg <= "0000100";
-                    end case;
+                    if state /=0 then
+                        val := (num mod (10**state))/(10**(state-1));
+                        num <= num-val*(10**(state-1));
+                        case val is
+                              when 0 =>
+                                seg <= "0000001";
+                              when 1 =>
+                                seg <= "1001111";                    
+                              when 2 =>
+                                seg <= "0010010";
+                              when 3 =>
+                                seg <= "0000110";
+                              when 4 =>
+                                seg <= "1001100";
+                              when 5 =>
+                                seg <= "0100100";
+                              when 6 =>
+                                seg <= "0100000";
+                              when 7 =>
+                                seg <= "0001111";
+                              when 8 =>
+                                seg <= "0000000";
+                              when 9 =>
+                                seg <= "0000100";
+                        end case;
+                    end if;
                 end if;
             end if;
         end process;
