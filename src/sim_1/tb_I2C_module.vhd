@@ -30,7 +30,7 @@ architecture tb of tb_I2C_module is
     signal data      : std_logic_vector(7 downto 0) := (others => '0');
     signal clk       : std_logic := '0';
     signal rst       : std_logic;
-    signal SDA       : std_logic := 'Z';
+    signal SDA       : std_logic; -- := 'Z';
     signal SCL       : std_logic;
     signal response  : std_logic_vector(7 downto 0);
     signal done      : std_logic;
@@ -72,10 +72,10 @@ begin
         wait for 100 ns;
          
         -- Reset
-        -- rst <= '1'; -- resetování modulu pokud bude potřeba
-        -- wait for 100 ns;
-        -- rst <= '0';
-        -- wait for 100 ns;
+        rst <= '1'; -- resetování modulu pokud bude potřeba
+        wait for 100 ns;
+        rst <= '0';
+        wait for 100 ns;
 
         -- ADT7420 driver
         address <= "1001011"; -- 0x4B
@@ -104,7 +104,7 @@ begin
         SDA <= 'Z';
 
         -- Počkáme na konec přenosu
-        wait for 20*TbPeriod;
+        wait for 1250 ns;
 
         -- Ukončení simulace
         TbSimEnded <= '1';

@@ -57,7 +57,7 @@ architecture Behavioral of I2C_module is
     
     -- read write logic constants
     constant WRITE : std_logic := '0';
-    constant READ  : std_logic := '1';
+    constant READ  : std_logic := 'Z';
 
     type  state_type is (WAIT_FOR_DATA, START_CONDITION, SEND_ADDRESS, SEND_REGISTER, STOP_CONDITION, READ_DATA, CHECK_ACK, NACK);
     signal state : state_type := WAIT_FOR_DATA;
@@ -66,7 +66,7 @@ architecture Behavioral of I2C_module is
     signal bit_cnt : integer range 0 to 7 := 0;
     signal frame_1 : STD_LOGIC_VECTOR (7 downto 0);
     signal frame_2 : STD_LOGIC_VECTOR (7 downto 0);
-    signal i : integer := 1; -- iteration
+    --signal i : integer := 1; -- iteration
     signal ack_wait : std_logic := '0';
     
 begin
@@ -87,12 +87,15 @@ begin
 
     p_I2C_module: process (clk)
     begin
-        if (rst = '1') then                            
+        if (rst = '1') then               
+            SDA <= 'Z';
+            SCL <= 'Z';             
 --          response <= (others => RESET_LOGIC);
             frame_1 <= (others => '0');
             frame_2 <= (others => '0');
             
             bit_cnt <= 0;
+            ack_wait <= '0';
             done <= '0';            
             -- next state
             state <= WAIT_FOR_DATA;
@@ -100,19 +103,38 @@ begin
         
         case state is
             when WAIT_FOR_DATA =>
-                SDA <= '1';
-                SCL <= '1';
+                report "WAIT_FOR_DATA";
+                SDA <= 'Z';
+                SCL <= 'Z';
                 
                 if (rising_edge(clk)) then
-                    if (num_bytes /= 0) then                                         
-                        frame_1 <= address & WRITE;
-                        frame_2 <= reg;
+                    if (num_bytes /= 0) then
+                        -- frame 1       
+                        for i in 0 to 6 loop
+                            if address(6 - i) = '1' then
+                                frame_1(7 - i) <= 'Z'; -- Z pro 1
+                            else
+                                frame_1(7 - i) <= '0'; -- 0 pro 0
+                            end if;
+                        end loop;
+                        frame_1(0) <= WRITE; -- bit W/R
+                        
+                        -- frame 2                               
+                        for i in 0 to 7 loop
+                            if reg(i) = '1' then
+                                frame_2(i) <= 'Z';
+                            else
+                                frame_2(i) <= '0';
+                            end if;
+                        end loop;                        
+                        
                         -- next state
                         state <= START_CONDITION;
                     end if;
                 end if;
                 
             when START_CONDITION =>
+                report "START_CONDITION";
                 -- SDA 1 -> 0, SCL = 1
                 if (rising_edge(clk)) then
                     SDA <= '0';
@@ -121,8 +143,10 @@ begin
                 end if;
                                  
             when SEND_ADDRESS =>
+                report "SEND_ADDRESS";
                 if (falling_edge(clk)) then
-                    SCL <= clk; -- 400 kHz
+                    report "SEND_ADDRESS_falling_edge";
+                    SCL <= '0'; -- 400 kHz
                     SDA <= frame_1(7 - bit_cnt);                                                                      
                     
                     if (bit_cnt = 7) then
@@ -134,12 +158,11 @@ begin
                         bit_cnt <= bit_cnt + 1;                     
                     end if;
                 else
-                    SCL <= clk; -- rising_edge
+                    report "SEND_ADDRESS_rising_edge";
+                    SCL <= 'Z'; -- rising_edge
                 end if;
                              
-            when CHECK_ACK =>
-                SCL <= clk;
-                
+            when CHECK_ACK =>               
 --                if (falling_edge(clk)) then
 --                    SDA <= 'Z';
 --                    if (SDA = '0') then
@@ -151,14 +174,16 @@ begin
 --                        -- state <= NACK
 --                    end if;
 --                end if;
-                
+                report "CHECK_ACK";
                 if (falling_edge(clk)) then
+                SCL <= '0';
                     if ack_wait = '0' then
                         SDA <= 'Z';
                         ack_wait <= '1'; -- wait for another rising_edge
                     end if;
 
                 elsif (rising_edge(clk)) then
+                    SCL <= 'Z';
                     if ack_wait = '1' then
                         if SDA = '0' then
                             -- ACK
@@ -173,9 +198,10 @@ begin
                 end if;
                                 
             when SEND_REGISTER =>
+                report "SEND_REGISTER";
                 if (falling_edge(clk)) then
                     SDA <= frame_2(7 - bit_cnt);
-                    SCL <= clk;
+                    SCL <= '0';
                     
                     if (bit_cnt = 7) then
                         -- next state
@@ -185,14 +211,15 @@ begin
                         bit_cnt <= bit_cnt + 1;
                     end if;
                 else
-                    SCL <= clk;
+                    SCL <= 'Z';
                 end if;
                 
             when STOP_CONDITION =>
+                report "WAIT_FOR_DATA";
                 if (falling_edge(clk)) then
                     -- SDA 0 -> 1, SCL = 1
-                    SCL <= '1';
-                    SDA <= '1';
+                    SCL <= '0';
+                    SDA <= 'Z';
                     state <= READ_DATA;
                 end if;
                 
