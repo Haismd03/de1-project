@@ -66,16 +66,18 @@ begin
         address <= (others => '0');
         reg <= (others => '0');
         rw <= '0';
+        SDA <= 'H'; -- weak pull up
+        SCL <= 'H'; -- weak pull up
         num_bytes <= 0;
         rst <= '0';
         
-        wait for 100 ns;
+        wait for 2*TbPeriod;
          
         -- Reset
-        rst <= '1'; -- resetování modulu pokud bude potřeba
-        wait for 100 ns;
-        rst <= '0';
-        wait for 100 ns;
+--        rst <= '1'; -- resetování modulu pokud bude potřeba
+--        wait for 2*TbPeriod;
+--        rst <= '0';
+--        wait for 2*TbPeriod;
 
         -- ADT7420 driver
         address <= "1001011"; -- 0x4B
@@ -88,12 +90,12 @@ begin
         --done <= '0';
 
         -- Počkat než začne odesílání adresy
-        wait for 2400 ns;
+        wait for 10*TbPeriod;
 
         -- První ACK po adrese
         SDA <= '0'; -- Slave drží sběrnici na 0
         wait for TbPeriod;
-        SDA <= 'Z'; -- Uvolnění sběrnice
+        SDA <= 'H'; -- Uvolnění sběrnice
 
         -- Počkat než začne odesílání registru
         wait for 2250 ns;
@@ -101,7 +103,7 @@ begin
         -- Druhý ACK po registru
         SDA <= '0';
         wait for TbPeriod;
-        SDA <= 'Z';
+        SDA <= 'H';
 
         -- Počkáme na konec přenosu
         wait for 1250 ns;

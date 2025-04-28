@@ -59,8 +59,8 @@ architecture Behavioral of I2C_module is
     constant WRITE : std_logic := '0';
     constant READ  : std_logic := 'Z';
 
-    type  state_type is (WAIT_FOR_DATA, START_CONDITION, SEND_ADDRESS, SEND_REGISTER, STOP_CONDITION, READ_DATA, CHECK_ACK, NACK);
-    signal state : state_type := WAIT_FOR_DATA;
+    type  state_type is (RESET, WAIT_FOR_DATA, START_CONDITION, SEND_ADDRESS, SEND_REGISTER, STOP_CONDITION, READ_DATA, CHECK_ACK, NACK);
+    signal state : state_type := RESET;
     signal next_state : state_type;
     
     signal bit_cnt : integer range 0 to 7 := 0;
@@ -70,42 +70,46 @@ architecture Behavioral of I2C_module is
     signal ack_wait : std_logic := '0';
     
 begin
---    p_SCL_driver : process (clk, state)
---    begin
---        if (state = SEND_ADDRESS or state = SEND_REGISTER or state = CHECK_ACK or state = STOP_CONDITION) then
---            if (clk = '1') then
---                SCL <= '1';
---            elsif (clk = '0') then
---                SCL <= '0';
---            else
---                SCL <= '0'; -- Default fallback pro nevalidní clk
---            end if;
---        else
---            SCL <= '1';
---        end if;
---    end process;
+    p_SCL_driver : process (clk)
+    begin
+        if (state = SEND_ADDRESS or state = SEND_REGISTER or state = CHECK_ACK or state = STOP_CONDITION) then
+            if (clk = '1') then
+                SCL <= 'Z';
+            elsif (clk = '0') then
+                SCL <= '0';
+            else
+                SCL <= '0'; -- Default fallback pro nevalidní clk
+            end if;
+        else
+            SCL <= '1';
+        end if;
+    end process;
 
     p_I2C_module: process (clk)
     begin
         if (rst = '1') then               
-            SDA <= 'Z';
-            SCL <= 'Z';             
---          response <= (others => RESET_LOGIC);
-            frame_1 <= (others => '0');
-            frame_2 <= (others => '0');
-            
-            bit_cnt <= 0;
-            ack_wait <= '0';
-            done <= '0';            
-            -- next state
-            state <= WAIT_FOR_DATA;
+            state <= RESET;
         end if;      
         
         case state is
+            when RESET =>
+                SDA <= 'Z';
+                SCL <= 'Z';             
+                --response <= (others => RESET_LOGIC);
+                frame_1 <= (others => '0');
+                frame_2 <= (others => '0');
+                
+                bit_cnt <= 0;
+                ack_wait <= '0';
+                done <= '0';            
+                -- next state
+                if (rst /= '1') then
+                    state <= WAIT_FOR_DATA;
+                end if;
             when WAIT_FOR_DATA =>
                 report "WAIT_FOR_DATA";
                 SDA <= 'Z';
-                SCL <= 'Z';
+--                SCL <= 'Z';
                 
                 if (rising_edge(clk)) then
                     if (num_bytes /= 0) then
@@ -146,7 +150,7 @@ begin
                 report "SEND_ADDRESS";
                 if (falling_edge(clk)) then
                     report "SEND_ADDRESS_falling_edge";
-                    SCL <= '0'; -- 400 kHz
+--                    SCL <= '0'; -- 400 kHz
                     SDA <= frame_1(7 - bit_cnt);                                                                      
                     
                     if (bit_cnt = 7) then
@@ -159,7 +163,7 @@ begin
                     end if;
                 else
                     report "SEND_ADDRESS_rising_edge";
-                    SCL <= 'Z'; -- rising_edge
+--                    SCL <= 'Z'; -- rising_edge
                 end if;
                              
             when CHECK_ACK =>               
@@ -176,14 +180,14 @@ begin
 --                end if;
                 report "CHECK_ACK";
                 if (falling_edge(clk)) then
-                SCL <= '0';
+--                    SCL <= '0';
                     if ack_wait = '0' then
                         SDA <= 'Z';
                         ack_wait <= '1'; -- wait for another rising_edge
                     end if;
 
                 elsif (rising_edge(clk)) then
-                    SCL <= 'Z';
+--                    SCL <= 'Z';
                     if ack_wait = '1' then
                         if SDA = '0' then
                             -- ACK
@@ -201,7 +205,7 @@ begin
                 report "SEND_REGISTER";
                 if (falling_edge(clk)) then
                     SDA <= frame_2(7 - bit_cnt);
-                    SCL <= '0';
+--                    SCL <= '0';
                     
                     if (bit_cnt = 7) then
                         -- next state
@@ -211,14 +215,14 @@ begin
                         bit_cnt <= bit_cnt + 1;
                     end if;
                 else
-                    SCL <= 'Z';
+--                    SCL <= 'Z';
                 end if;
                 
             when STOP_CONDITION =>
                 report "WAIT_FOR_DATA";
                 if (falling_edge(clk)) then
                     -- SDA 0 -> 1, SCL = 1
-                    SCL <= '0';
+--                    SCL <= '0';
                     SDA <= 'Z';
                     state <= READ_DATA;
                 end if;
