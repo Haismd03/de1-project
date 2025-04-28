@@ -151,18 +151,19 @@ begin
                 if (falling_edge(clk)) then
                     report "SEND_ADDRESS_falling_edge";
 --                    SCL <= '0'; -- 400 kHz
-                    SDA <= frame_1(7 - bit_cnt);                                                                      
-                    
-                    if (bit_cnt = 7) then
+                    if (bit_cnt < 8) then
+                        SDA <= frame_1(7 - bit_cnt);
+                        bit_cnt <= bit_cnt + 1;
+                        
+                    elsif (bit_cnt = 8) then -- "ninght" bit
                         bit_cnt <= 0; 
+                        SDA <= 'Z';
                         -- next state                    
                         state <= CHECK_ACK;
                         next_state <= SEND_REGISTER;
-                    else
-                        bit_cnt <= bit_cnt + 1;                     
-                    end if;
+                    end if;              
+                                                                             
                 else
-                    report "SEND_ADDRESS_rising_edge";
 --                    SCL <= 'Z'; -- rising_edge
                 end if;
                              
@@ -179,25 +180,16 @@ begin
 --                    end if;
 --                end if;
                 report "CHECK_ACK";
-                if (falling_edge(clk)) then
---                    SCL <= '0';
-                    if ack_wait = '0' then
-                        SDA <= 'Z';
-                        ack_wait <= '1'; -- wait for another rising_edge
-                    end if;
 
-                elsif (rising_edge(clk)) then
---                    SCL <= 'Z';
-                    if ack_wait = '1' then
-                        if SDA = '0' then
-                            -- ACK
-                            state <= next_state;  
-                        else
-                            -- ADT7420s not responding
-                            report "NACK";
-                            -- state <= NACK;
-                        end if;
-                        ack_wait <= '0'; -- reset
+                if (rising_edge(clk)) then
+                    -- SCL <= 'Z';
+                    if SDA = '0' then
+                        -- ACK
+                        state <= next_state;  
+                    else
+                        -- ADT7420s not responding
+                        report "NACK";
+                        state <= NACK;
                     end if;
                 end if;
                                 
@@ -227,8 +219,12 @@ begin
                     state <= READ_DATA;
                 end if;
                 
+            when  NACK => 
+                report "NACK";
+                
             when others =>
                 state <= WAIT_FOR_DATA; 
+            
                 
         end case;
     end process p_I2C_module;
