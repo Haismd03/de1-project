@@ -32,8 +32,9 @@ end entity clock_enable;
 architecture behavioral of clock_enable is
 
   --! Local counter
-  signal n_periods : integer := 100000000 / n_freq;
-  signal sig_count : integer range 0 to ((100000000 / n_freq) - 1); -- base clock 100MHz
+  signal n_half_periods : integer := (100000000 / n_freq) / 2;
+  signal sig_count : integer range 0 to (((100000000 / n_freq) / 2) - 1); -- base clock 100MHz
+  signal clk_div : std_logic := '0'; -- divided clock signal
 
 begin
 
@@ -44,21 +45,22 @@ begin
     if (rising_edge(clk)) then                   -- Synchronous process
       if (rst = '1') then                        -- High-active reset
         sig_count <= 0;
+        clk_div <= '0';
 
       -- Counting
-      elsif (sig_count < (n_periods - 1)) then
-        sig_count <= sig_count + 1;              -- Increment local counter
+      elsif sig_count < (n_half_periods - 1) then
+        sig_count <= sig_count + 1;             -- Increment local counter
 
       -- End of counter reached
       else
         sig_count <= 0;
+        clk_div <= not clk_div; -- toggle the clock output
       end if;                                    -- Each `if` must end by `end if`
     end if;
 
   end process p_clk_enable;
 
   -- Generated pulse is always one clock long
-  pulse <= '1' when (sig_count = n_periods - 1) else
-           '0';
+  pulse <= clk_div;
 
 end architecture behavioral;
