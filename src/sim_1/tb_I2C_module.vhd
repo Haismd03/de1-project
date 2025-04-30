@@ -17,7 +17,7 @@ architecture tb of tb_I2C_module is
             rst       : in std_logic;
             SDA       : inout std_logic;
             SCL       : out std_logic;
-            response  : out std_logic_vector(7 downto 0);
+            response  : out std_logic_vector(15 downto 0);
             done      : out std_logic
         );
     end component;
@@ -30,9 +30,9 @@ architecture tb of tb_I2C_module is
     signal data      : std_logic_vector(7 downto 0) := (others => '0');
     signal clk       : std_logic := '0';
     signal rst       : std_logic;
-    signal SDA       : std_logic; -- := 'Z';
+    signal SDA       : std_logic;
     signal SCL       : std_logic;
-    signal response  : std_logic_vector(7 downto 0);
+    signal response  : std_logic_vector(15 downto 0);
     signal done      : std_logic;
 
     constant TbPeriod : time := 250 ns;
@@ -40,7 +40,6 @@ architecture tb of tb_I2C_module is
 
 begin
 
-    -- Propojení DUT
     dut : I2C_module
         port map (
             address   => address,
@@ -56,13 +55,13 @@ begin
             done      => done
         );
 
-    -- Generování hodin
+    -- Clock generation
     clk <= not clk after TbPeriod/2 when TbSimEnded /= '1' else '0';
 
     -- Stimuli process
     stimuli : process
     begin
-        -- Inicializace
+        -- Inicialization
         address <= (others => '0');
         reg <= (others => '0');
         rw <= '0';
@@ -73,8 +72,8 @@ begin
         
         wait for 2*TbPeriod;
          
-        -- Reset
---        rst <= '1'; -- resetování modulu pokud bude potřeba
+        -- Reset (if needed)
+--        rst <= '1';
 --        wait for 2*TbPeriod;
 --        rst <= '0';
 --        wait for 2*TbPeriod;
@@ -84,31 +83,30 @@ begin
         reg <= "00000000";    -- 0x00
         num_bytes <= 2;
         
-        -- nepoužívá se prozatim
         --data <= (others => '0'); 
         --response <= (others => '0');
         --done <= '0';
 
-        -- Počkat než začne odesílání adresy
+        -- Wait for end of SEND_ADDRESS
         wait for 10*TbPeriod;
 
-        -- První ACK po adrese
-        SDA <= '0'; -- Slave drží sběrnici na 0
+        -- First ACK after address
+        SDA <= '0'; -- Slave holds bus on 0
         wait for TbPeriod;
-        SDA <= 'H'; -- Uvolnění sběrnice
+        SDA <= 'H'; -- Release bus
 
-        -- Počkat než začne odesílání registru
+        -- Wait for sending register
         wait for 2250 ns;
 
-        -- Druhý ACK po registru
-        SDA <= '0';
-        wait for TbPeriod;
-        SDA <= 'H';
+--        -- Second ACK after register
+--        SDA <= '0';
+--        wait for TbPeriod;
+--        SDA <= 'H';
 
-        -- Počkáme na konec přenosu
+        -- Waif for end of the process
         wait for 1250 ns;
 
-        -- Ukončení simulace
+        -- End simulation
         TbSimEnded <= '1';
         wait;
     end process;
