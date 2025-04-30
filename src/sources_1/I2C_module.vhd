@@ -61,12 +61,11 @@ architecture Behavioral of I2C_module is
     signal bit_cnt : integer range 0 to 7 := 0;
     signal frame_1 : STD_LOGIC_VECTOR (7 downto 0);
     signal frame_2 : STD_LOGIC_VECTOR (7 downto 0);
-    signal state_wait : std_logic := '0';
     
 begin
     p_SCL_driver : process (clk)
     begin
-        if (state = SEND_ADDRESS or state = SEND_REGISTER or state = CHECK_ACK or state = STOP_CONDITION) then
+        if (state = SEND_ADDRESS or state = SEND_REGISTER or state = CHECK_ACK) then
             if (clk = '1') then
                 SCL <= 'Z';
             elsif (clk = '0') then
@@ -75,7 +74,7 @@ begin
                 SCL <= '0'; -- Default fallback for not valid clk
             end if;
         else
-            SCL <= '1';
+            SCL <= 'Z';
         end if;
     end process;
 
@@ -94,17 +93,18 @@ begin
                 frame_2 <= (others => '0');
                 
                 bit_cnt <= 0;
-                state_wait <= '0';
                 done <= '0';            
                 -- next state
                 if (rst /= '1') then
                     state <= WAIT_FOR_DATA;
                 end if;
+                
             when WAIT_FOR_DATA =>
                 SDA <= 'Z';
-                
+            
                 if (rising_edge(clk)) then
-                    if (num_bytes /= 0) then                    
+                    if (num_bytes /= 0) then  
+                                      
                         -- frame 1       
                         for i in 0 to 6 loop
                             if address(6 - i) = '1' then
@@ -143,9 +143,9 @@ begin
                         SDA <= frame_1(7 - bit_cnt);
                         bit_cnt <= bit_cnt + 1;
                         
-                    elsif (bit_cnt = 8) then -- "ninght" bit
+                    else --  for 8 bits you need 9 falling edges
                         bit_cnt <= 0; 
-                        SDA <= 'Z';
+                        --SDA <= 'Z';                      
                         -- next state                    
                         state <= CHECK_ACK;                       
                         if (next_state /= READ_DATA) then
@@ -154,42 +154,45 @@ begin
                     end if;              
                 end if;
                              
-            when CHECK_ACK =>               
+            when CHECK_ACK =>           
                 if (rising_edge(clk)) then
-                    if SDA = '0' then
+                    if (SDA = '0') then                      
                         -- ACK
-                        state <= next_state;  
-                    else
+                        -- next state                       
+                        state <= next_state;
+                    else                        
                         -- ADT7420s not responding
+                        -- next state 
                         state <= NACK;
-                    end if;
+                    end if;                                                
                 end if;
                                 
             when SEND_REGISTER =>
                 if (falling_edge(clk)) then
-                    SDA <= frame_2(7 - bit_cnt);
-                    
-                    if (bit_cnt = 7) then
+                    if (bit_cnt < 8) then
+                        SDA <= frame_2(7 - bit_cnt);
+                        bit_cnt <= bit_cnt + 1;
+                       
+                    else 
+                        bit_cnt <= 0; 
                         -- next state
                         state <= CHECK_ACK;
-                        next_state <= STOP_CONDITION;
-                    else
-                        bit_cnt <= bit_cnt + 1;
+                        next_state <= STOP_CONDITION;                                               
                     end if;
                 end if;
                 
             when STOP_CONDITION =>
-                if (falling_edge(clk)) then
-                    if (state_wait /= '1') then                   
-                        -- SDA 0 -> 1, SCL = 1
-                        SDA <= 'Z';
-                        state_wait <= '1';
-                    else
-                        -- next state
-                        state <= START_CONDITION;
-                        next_state <= READ_DATA; -- actually its next-next-next-next state
-                    end if;
+                if (falling_edge(clk)) then                
+                    -- SDA 0 -> 1, SCL = 1
+                    SDA <= 'Z';
+                    SCL <= '0';
+                else
+                    SCL <= 'Z';
+                    -- next state
+                    state <= START_CONDITION;
+                    next_state <= READ_DATA; -- actually its next-next-next-next state
                 end if;
+                
                 
             when READ_DATA =>
             

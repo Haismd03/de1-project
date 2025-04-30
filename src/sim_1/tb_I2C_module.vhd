@@ -96,15 +96,15 @@ begin
         SDA <= 'H'; -- Release bus
 
         -- Wait for sending register
-        wait for 2250 ns;
+        wait for 7*TbPeriod;
 
---        -- Second ACK after register
---        SDA <= '0';
---        wait for TbPeriod;
---        SDA <= 'H';
+        -- Second ACK after register
+        SDA <= '0';
+        wait for TbPeriod;
+        SDA <= 'H';
 
         -- Waif for end of the process
-        wait for 1250 ns;
+        wait for 5000 ns;
 
         -- End simulation
         TbSimEnded <= '1';
