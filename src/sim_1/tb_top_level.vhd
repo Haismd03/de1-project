@@ -10,8 +10,12 @@ entity tb_top_level is
 end tb_top_level;
 
 architecture tb of tb_top_level is
-
+    
     component top_level
+        generic (
+            I2C_CLK_FREQ : integer := 400000; -- 400 kHz
+            START_CLK_FREQ : integer := 1 -- 1 Hz
+        );
         port (CLK100MHZ : in std_logic;
               BTNC      : in std_logic;
               TMP_SDA   : inout std_logic;
@@ -51,6 +55,10 @@ architecture tb of tb_top_level is
 begin
 
     dut : top_level
+    generic map (
+        I2C_CLK_FREQ => 400000,
+        START_CLK_FREQ => 200
+    )
     port map (CLK100MHZ => CLK100MHZ,
               BTNC      => BTNC,
               TMP_SDA   => TMP_SDA,
@@ -94,7 +102,7 @@ begin
             elsif scl_count = 9 then
                 -- Release SDA after ACK bit
                 TMP_SDA <= 'H';
-                scl_count <= 0; -- Ready for next byte
+                scl_count <= 1; -- Ready for next byte
                 tb_generate_ACK <= '0';
             end if;
         end loop;

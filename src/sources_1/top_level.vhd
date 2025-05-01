@@ -32,6 +32,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity top_level is
+    generic (
+        I2C_CLK_FREQ : integer := 400000; -- 400 kHz
+        START_CLK_FREQ : integer := 1 -- 1 Hz
+    );
     port (
         -- clock
         CLK100MHZ : in std_logic; --! Main clock
@@ -132,7 +136,7 @@ begin
 
     I2C_clk : component clock_enable
         generic map ( 
-            n_freq => 400000 -- 400 kHz
+            n_freq => I2C_CLK_FREQ
         )
         port map (
             clk => CLK100MHZ,
@@ -142,7 +146,7 @@ begin
         
     start_clk : component clock_enable
         generic map ( 
-            n_freq => 1 -- 1 Hz
+            n_freq => START_CLK_FREQ
         )
         port map (
             clk => CLK100MHZ,
