@@ -59,6 +59,7 @@ architecture Behavioral of I2C_module is
     signal next_state : state_type;
     
     signal bit_cnt : integer range 0 to 15 := 0;
+    signal ack_wait : std_logic := '0';
     signal frame_1 : STD_LOGIC_VECTOR (7 downto 0);
     signal frame_2 : STD_LOGIC_VECTOR (7 downto 0);
     signal frame_read : STD_LOGIC_VECTOR (15 downto 0);
@@ -92,6 +93,7 @@ begin
                 --response <= (others => RESET_LOGIC);
                 frame_1 <= (others => '0');
                 frame_2 <= (others => '0');
+                frame_read <= (others => '0');
                 
                 bit_cnt <= 0;
                 done <= '0';            
@@ -195,7 +197,7 @@ begin
                     SCL <= 'Z';
                     -- next state
                     if (bit_cnt > 1) then
-                        state <= RESET;
+                        state <= SEND_DATA_TO_MASTER;
                     else
                         state <= START_CONDITION;
                         next_state <= READ_MSB; -- actually its next-next-next-next state                     
@@ -209,8 +211,11 @@ begin
                         bit_cnt <= bit_cnt + 1;                                                                                                                                
                     else                      
                         -- next state 
-                        if (num_bytes = 2) then     
-                            next_state <= READ_LSB;
+                        if (num_bytes = 2) then
+                            frame_read(15 - bit_cnt) <= SDA;
+                            bit_cnt <= bit_cnt + 1;
+                             
+                            next_state <= READ_LSB;                            
                             state <= SEND_ACK;                            
                         else
                             -- NACK
@@ -223,9 +228,14 @@ begin
                 -- when send nack?
                 if (falling_edge(clk)) then            
                     SDA <= '0';
-                else
-                    -- next state                 
-                    state <= next_state;                
+                    if (ack_wait = '1') then 
+                        SDA <= 'Z';
+                        ack_wait <= '0';                   
+                        -- next state                 
+                        state <= next_state; 
+                    else 
+                        ack_wait <= '1';
+                    end if;               
                 end if;
             
             when READ_LSB =>            
@@ -233,14 +243,21 @@ begin
                     if (bit_cnt < 15) then
                         frame_read(15 - bit_cnt) <= SDA;
                         bit_cnt <= bit_cnt + 1;                                                                                                                                
-                    else                     
+                    else             
+                        frame_read(15 - bit_cnt) <= SDA;    
                         -- next state
                         state <= STOP_CONDITION;                                                                          
                     end if;
                 end if;            
             
             when SEND_DATA_TO_MASTER =>
-                
+                if (rising_edge(clk)) then
+                    response <= frame_read;
+                    done <= '1';
+                    -- next state
+                    state <= RESET;               
+                end if;
+                                
             when NACK => 
                 bit_error <= '1';
                 state <= RESET;

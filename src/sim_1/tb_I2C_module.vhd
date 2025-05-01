@@ -142,7 +142,11 @@ begin
         SDA <= 'H';        
         wait for TbPeriod;
         SDA <= '0';                    
+        wait for TbPeriod;
         
+        -- release bus 
+        SDA <= 'H';    
+                
         -- Waif for end of the process
         wait for 7000 ns;
 
