@@ -80,31 +80,71 @@ begin
 
         -- ADT7420 driver
         address <= "1001011"; -- 0x4B
-        reg <= "00000000";    -- 0x00
+        reg <= "00100000";    -- 0x00
         num_bytes <= 2;
         
         --data <= (others => '0'); 
         --response <= (others => '0');
         --done <= '0';
 
-        -- Wait for end of SEND_ADDRESS
         wait for 10*TbPeriod;
-
         -- First ACK after address
         SDA <= '0'; -- Slave holds bus on 0
         wait for TbPeriod;
         SDA <= 'H'; -- Release bus
 
-        -- Wait for sending register
-        wait for 7*TbPeriod;
-
+        wait for 8*TbPeriod;
         -- Second ACK after register
         SDA <= '0';
         wait for TbPeriod;
         SDA <= 'H';
-
+        
+        wait for 10*TbPeriod;
+        -- Third ACK after address
+        SDA <= '0';
+        wait for TbPeriod;
+        
+        -- MSB
+        SDA <= '0';
+        wait for TbPeriod;
+        SDA <= 'H';
+        wait for TbPeriod;
+        SDA <= 'H';        
+        wait for TbPeriod;
+        SDA <= '0';
+        wait for TbPeriod;
+        SDA <= 'H';
+        wait for TbPeriod;
+        SDA <= 'H';        
+        wait for TbPeriod;
+        SDA <= 'H';
+        wait for TbPeriod;
+        SDA <= 'H';  
+        wait for TbPeriod;
+        
+        -- release bus 
+        SDA <= 'H';        
+        wait for TbPeriod;
+        
+        -- LSB
+        SDA <= 'H';
+        wait for TbPeriod;               
+        SDA <= 'H';
+        wait for TbPeriod;
+        SDA <= 'H';
+        wait for TbPeriod;
+        SDA <= 'H';        
+        wait for TbPeriod;
+        SDA <= '0';
+        wait for TbPeriod;
+        SDA <= 'H';
+        wait for TbPeriod;
+        SDA <= 'H';        
+        wait for TbPeriod;
+        SDA <= '0';                    
+        
         -- Waif for end of the process
-        wait for 5000 ns;
+        wait for 7000 ns;
 
         -- End simulation
         TbSimEnded <= '1';

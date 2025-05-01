@@ -53,19 +53,20 @@ architecture Behavioral of I2C_module is
     constant WRITE : std_logic := '0';
     constant READ  : std_logic := 'Z';
 
-    type  state_type is (RESET, WAIT_FOR_DATA, START_CONDITION, SEND_ADDRESS, SEND_REGISTER, STOP_CONDITION, READ_DATA,
+    type  state_type is (RESET, WAIT_FOR_DATA, START_CONDITION, SEND_ADDRESS, SEND_REGISTER, STOP_CONDITION, READ_MSB, READ_LSB,
     CHECK_ACK, SEND_ACK, SEND_NACK, NACK, SEND_DATA_TO_MASTER);
     signal state : state_type := RESET;
     signal next_state : state_type;
     
-    signal bit_cnt : integer range 0 to 7 := 0;
+    signal bit_cnt : integer range 0 to 15 := 0;
     signal frame_1 : STD_LOGIC_VECTOR (7 downto 0);
     signal frame_2 : STD_LOGIC_VECTOR (7 downto 0);
+    signal frame_read : STD_LOGIC_VECTOR (15 downto 0);
     
 begin
     p_SCL_driver : process (clk)
     begin
-        if (state = SEND_ADDRESS or state = SEND_REGISTER or state = CHECK_ACK) then
+        if (state = SEND_ADDRESS or state = SEND_REGISTER or state = CHECK_ACK or state = READ_MSB or state = READ_LSB or state = SEND_ACK) then
             if (clk = '1') then
                 SCL <= 'Z';
             elsif (clk = '0') then
@@ -105,7 +106,7 @@ begin
                 if (rising_edge(clk)) then
                     if (num_bytes /= 0) then  
                                       
-                        -- frame 1       
+                        -- frame 1 (adress)    
                         for i in 0 to 6 loop
                             if address(6 - i) = '1' then
                                 frame_1(7 - i) <= 'Z'; -- Z stands for 1 (open-drain com)
@@ -115,7 +116,7 @@ begin
                         end loop;
                         frame_1(0) <= WRITE; -- bit W/R
                                                 
-                        -- frame 2                               
+                        -- frame 2 (register)                            
                         for i in 0 to 7 loop
                             if reg(i) = '1' then
                                 frame_2(i) <= 'Z';
@@ -130,36 +131,39 @@ begin
                 end if;
                 
             when START_CONDITION =>
-                -- SDA 1 -> 0, SCL = 1
+                -- SDA 1 -> 0, SCL = 1                                   
                 if (rising_edge(clk)) then
                     SDA <= '0';
+                    -- READ/WRITE bit & next state after ACK
+                    if (next_state = READ_MSB) then 
+                        frame_1(0) <= READ;
+                    else                            
+                        next_state <= SEND_REGISTER;
+                    end if;                   
                     -- next state                   
                     state <= SEND_ADDRESS;
                 end if;
                                  
-            when SEND_ADDRESS =>
-                if (falling_edge(clk)) then                   
+            when SEND_ADDRESS =>            
+                if (falling_edge(clk)) then                  
                     if (bit_cnt < 8) then
                         SDA <= frame_1(7 - bit_cnt);
-                        bit_cnt <= bit_cnt + 1;
-                        
-                    else --  for 8 bits you need 9 falling edges
-                        bit_cnt <= 0; 
-                        --SDA <= 'Z';                      
+                        bit_cnt <= bit_cnt + 1;                                                                                                                                
+                    else 
+                        -- for 8 bits you need 9 falling edges
+                        bit_cnt <= 0;
+                        SDA <= 'Z'; -- release bus                       
                         -- next state                    
-                        state <= CHECK_ACK;                       
-                        if (next_state /= READ_DATA) then
-                            next_state <= SEND_REGISTER;
-                        end if;
+                        state <= CHECK_ACK;                                             
                     end if;              
                 end if;
                              
-            when CHECK_ACK =>           
+            when CHECK_ACK =>          
                 if (rising_edge(clk)) then
                     if (SDA = '0') then                      
                         -- ACK
                         -- next state                       
-                        state <= next_state;
+                        state <= next_state;                        
                     else                        
                         -- ADT7420s not responding
                         -- next state 
@@ -171,10 +175,10 @@ begin
                 if (falling_edge(clk)) then
                     if (bit_cnt < 8) then
                         SDA <= frame_2(7 - bit_cnt);
-                        bit_cnt <= bit_cnt + 1;
-                       
+                        bit_cnt <= bit_cnt + 1;                                              
                     else 
                         bit_cnt <= 0; 
+                        SDA <= 'Z'; -- release bus 
                         -- next state
                         state <= CHECK_ACK;
                         next_state <= STOP_CONDITION;                                               
@@ -182,6 +186,7 @@ begin
                 end if;
                 
             when STOP_CONDITION =>
+                -- NACK by master
                 if (falling_edge(clk)) then                
                     -- SDA 0 -> 1, SCL = 1
                     SDA <= 'Z';
@@ -189,16 +194,50 @@ begin
                 else
                     SCL <= 'Z';
                     -- next state
-                    state <= START_CONDITION;
-                    next_state <= READ_DATA; -- actually its next-next-next-next state
+                    if (bit_cnt > 1) then
+                        state <= RESET;
+                    else
+                        state <= START_CONDITION;
+                        next_state <= READ_MSB; -- actually its next-next-next-next state                     
+                    end if;
+                end if;              
+                
+            when READ_MSB =>
+                if (rising_edge(clk)) then
+                    if (bit_cnt < 7) then
+                        frame_read(15 - bit_cnt) <= SDA;
+                        bit_cnt <= bit_cnt + 1;                                                                                                                                
+                    else                      
+                        -- next state 
+                        if (num_bytes = 2) then     
+                            next_state <= READ_LSB;
+                            state <= SEND_ACK;                            
+                        else
+                            -- NACK
+                            state <= STOP_CONDITION;
+                        end if;                                                                           
+                    end if;
                 end if;
-                
-                
-            when READ_DATA =>
             
             when SEND_ACK =>
+                -- when send nack?
+                if (falling_edge(clk)) then            
+                    SDA <= '0';
+                else
+                    -- next state                 
+                    state <= next_state;                
+                end if;
             
-            when SEND_NACK =>
+            when READ_LSB =>            
+               if (rising_edge(clk)) then
+                    if (bit_cnt < 15) then
+                        frame_read(15 - bit_cnt) <= SDA;
+                        bit_cnt <= bit_cnt + 1;                                                                                                                                
+                    else                     
+                        -- next state
+                        state <= STOP_CONDITION;                                                                          
+                    end if;
+                end if;            
             
             when SEND_DATA_TO_MASTER =>
                 
