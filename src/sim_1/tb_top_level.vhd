@@ -33,7 +33,7 @@ architecture tb of tb_top_level is
 
     signal CLK100MHZ : std_logic;
     signal BTNC      : std_logic;
-    signal TMP_SDA   : std_logic;
+    signal TMP_SDA   : std_logic := 'H';
     signal TMP_SCL   : std_logic;
     signal CA        : std_logic;
     signal CB        : std_logic;
@@ -50,6 +50,7 @@ architecture tb of tb_top_level is
     signal TbSimEnded : std_logic := '0';
     
     signal scl_count : integer := 0;
+    signal ack_times : integer := 0;
     signal tb_generate_ACK : std_logic := '0';
 
 begin
@@ -57,7 +58,7 @@ begin
     dut : top_level
     generic map (
         I2C_CLK_FREQ => 400000,
-        START_CLK_FREQ => 200
+        START_CLK_FREQ => 1000
     )
     port map (CLK100MHZ => CLK100MHZ,
               BTNC      => BTNC,
@@ -89,20 +90,45 @@ begin
         wait for 100 ns;
         BTNC <= '0';
         wait for 100 ns;
-    
+
         -- Loop to simulate ACK timing
         while true loop
             wait until falling_edge(TMP_SCL);
             scl_count <= scl_count + 1;
 
-            if scl_count = 8 then
-                -- Prepare ACK: pull SDA low *before* the 9th rising edge
-                TMP_SDA <= '0';
-                tb_generate_ACK <= '1';
-            elsif scl_count = 9 then
-                -- Release SDA after ACK bit
-                TMP_SDA <= 'H';
-                scl_count <= 1; -- Ready for next byte
+            if ack_times = 0 or ack_times = 1 then
+                if scl_count = 8 then
+                    -- Prepare ACK: pull SDA low *before* the 9th rising edge
+                    TMP_SDA <= '0';
+                    scl_count <= 0;
+                    tb_generate_ACK <= '1';
+                    ack_times <= ack_times + 1;
+                else
+                    TMP_SDA <= 'H'; 
+                    tb_generate_ACK <= '0';
+                end if;
+            elsif ack_times = 2 then
+                if scl_count = 9 then
+                    -- Prepare ACK: pull SDA low *before* the 9th rising edge
+                    TMP_SDA <= '0';
+                    scl_count <= 0;
+                    tb_generate_ACK <= '1';
+                    ack_times <= ack_times + 1;
+                else
+                    TMP_SDA <= 'H'; 
+                    tb_generate_ACK <= '0';
+                end if;
+            elsif ack_times = 3 then
+                if scl_count = 17 then
+                    scl_count <= 0;
+                    ack_times <= 0;
+                else
+                    TMP_SDA <= 'H'; 
+                    tb_generate_ACK <= '0';
+                end if;
+            else
+                scl_count <= 0;
+                TMP_SDA <= 'H'; 
                 tb_generate_ACK <= '0';
             end if;
         end loop;
