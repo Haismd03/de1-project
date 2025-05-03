@@ -66,11 +66,18 @@ architecture Behavioral of ADT7420_driver is
 
     type state_t is (RESET_STATE, WAIT_FOR_START_STATE, REQUEST_TEMP_STATE, CONVERT_TEMP_STATE);
     signal state : state_t := RESET_STATE;
+    
+    signal latch_start : std_logic := '0';
 
 begin
-    p_adt7420_driver : process (clk) is
+    p_adt7420_driver : process (clk, start) is
     variable temp_temperature : integer := 0;
     begin
+    
+        if (rising_edge(start)) then
+            latch_start <= '1';
+        end if;
+    
         if(rising_edge(clk)) then
             if (rst = '1') then
                 state <= RESET_STATE;
@@ -84,7 +91,7 @@ begin
                     num_bytes <= RESET_INT;
                     done_read <= RESET_LOGIC;
                     
-                    temperature <= RESET_INT;
+                    latch_start <= '0';
                     
                     -- next state
                     if (rst /= '1') then
@@ -92,14 +99,9 @@ begin
                     end if;
                     
                 when WAIT_FOR_START_STATE =>
-                    address <= (others => RESET_LOGIC);
-                    read_write <= RESET_LOGIC;
-                    register_address <= (others => RESET_LOGIC);
-                    num_bytes <= RESET_INT;
-                    done_read <= RESET_LOGIC;
                     
                     -- next state
-                    if (start = '1') then
+                    if (latch_start = '1') then
                         state <= REQUEST_TEMP_STATE;
                     end if;                              
                         
@@ -108,6 +110,8 @@ begin
                     read_write <= READ;
                     register_address <= TEMP_REGISTER;
                     num_bytes <= 2;
+                    
+                    temperature <= RESET_INT;
                     
                     -- next state
                     if (done_request = '1') then
@@ -126,7 +130,7 @@ begin
                     done_read <= '1';
                     
                     -- next state
-                    state <= WAIT_FOR_START_STATE;
+                    state <= RESET_STATE;
             end case;
         end if;                       
     end process p_adt7420_driver;              
