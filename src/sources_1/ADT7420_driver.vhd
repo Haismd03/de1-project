@@ -91,7 +91,8 @@ begin
                     num_bytes <= RESET_INT;
                     done_read <= RESET_LOGIC;
                     
-                    latch_start <= '0';
+                    latch_start <= '0';                  
+                    temperature <= RESET_INT;
                     
                     -- next state
                     if (rst /= '1') then
@@ -99,6 +100,11 @@ begin
                     end if;
                     
                 when WAIT_FOR_START_STATE =>
+                    address <= (others => RESET_LOGIC);
+                    read_write <= RESET_LOGIC;
+                    register_address <= (others => RESET_LOGIC);
+                    num_bytes <= RESET_INT;
+                    done_read <= RESET_LOGIC;
                     
                     -- next state
                     if (latch_start = '1') then
@@ -111,13 +117,14 @@ begin
                     register_address <= TEMP_REGISTER;
                     num_bytes <= 2;
                     
+                    latch_start <= '0';
                     temperature <= RESET_INT;
                     
                     -- next state
                     if (done_request = '1') then
                         state <= CONVERT_TEMP_STATE;
                     elsif (i2c_error = '1') then
-                        state <= RESET_STATE;
+                        state <= WAIT_FOR_START_STATE;
                     end if;
                     
                 when CONVERT_TEMP_STATE =>
@@ -130,7 +137,7 @@ begin
                     done_read <= '1';
                     
                     -- next state
-                    state <= RESET_STATE;
+                    state <= WAIT_FOR_START_STATE;
             end case;
         end if;                       
     end process p_adt7420_driver;              
