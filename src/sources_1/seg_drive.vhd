@@ -43,7 +43,7 @@ architecture Behavioral of seg_drive is
     signal num : integer;
 begin
     process(clk)
-        variable val : integer range 0 to 9 := 0; 
+        variable val : integer range 0 to 9 := 0;
         variable temp : integer;
         begin
             if (rising_edge(clk)) then
@@ -62,35 +62,45 @@ begin
                                 temp := -temp;
                             end if;
                             num <= temp; 
-                            state <= 1;
+                            state <= state+1;
                         when 1 =>
                             an <= "11111110";
                             dp <= '1';
-                            state <= 2;
+                            val := (num mod (10**1));
+                            num <= num-val;
+                            state <= state+1;
                         when 2 =>
                             an <= "11111101";
                             dp <= '1';
-                            state <= 3;
+                            val := (num mod (10**2)/(10**(1)));
+                            num <= num-val*(10**(1));
+                            state <= state+1;
                         when 3 =>
                             an <= "11111011";
                             dp <= '1';
-                            state <= 4;
+                            val := (num mod (10**3)/(10**(2)));
+                            num <= num-val*(10**(2));
+                            state <= state+1;
                         when 4 =>
                             an <= "11110111";
                             dp <= '1';
-                            state <= 5;
+                            val := (num mod (10**4)/(10**(3)));
+                            num <= num-val*(10**(3));
+                            state <= state+1;
                         when 5 =>
                             an <= "11101111";
                             dp <= '0';
-                            state <= 6;
+                            val := (num mod (10**5)/(10**(4)));
+                            num <= num-val*(10**(4));
+                            state <= state+1;
                         when 6 =>
                             an <= "11011111";
                             dp <= '1';
+                            val := (num mod (10**6)/(10**(5)));
+                            num <= num-val*(10**(5));
                             state <= 0;
                     end case;
                     if state /=0 then
-                        val := (num mod (10**state))/(10**(state-1));
-                        num <= num-val*(10**(state-1));
                         case val is
                               when 0 =>
                                 seg <= "0000001";
