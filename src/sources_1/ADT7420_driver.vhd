@@ -40,6 +40,7 @@ entity ADT7420_driver is
         
         response_in : in std_logic_vector(15 downto 0);
         done_request : in std_logic;
+        i2c_error : in std_logic;
         
         address : out std_logic_vector(6 downto 0);
         read_write : out std_logic;
@@ -111,6 +112,8 @@ begin
                     -- next state
                     if (done_request = '1') then
                         state <= CONVERT_TEMP_STATE;
+                    elsif (i2c_error = '1') then
+                        state <= RESET_STATE;
                     end if;
                     
                 when CONVERT_TEMP_STATE =>
