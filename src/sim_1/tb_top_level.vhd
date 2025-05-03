@@ -51,14 +51,17 @@ architecture tb of tb_top_level is
     
     signal scl_count : integer := 0;
     signal ack_times : integer := 0;
+    signal i2c_cycle_count : integer := 0;
     signal tb_generate_ACK : std_logic := '0';
+    
+    signal temp_value : std_logic_vector (15 downto 0);
 
 begin
 
     dut : top_level
     generic map (
         I2C_CLK_FREQ => 400000,
-        START_CLK_FREQ => 1000
+        START_CLK_FREQ => 5000
     )
     port map (CLK100MHZ => CLK100MHZ,
               BTNC      => BTNC,
@@ -82,57 +85,71 @@ begin
 
     stimuli : process
     begin
-        TMP_SDA <= 'H';
-        TMP_SCL <= 'H';
     
         -- Reset sequence
         BTNC <= '1';
         wait for 100 ns;
         BTNC <= '0';
         wait for 100 ns;
+        
+        TMP_SDA <= 'H';
+        TMP_SCL <= 'H';
+        
+        temp_value <= b"0000110010000111";
 
         -- Loop to simulate ACK timing
         while true loop
             wait until falling_edge(TMP_SCL);
             scl_count <= scl_count + 1;
-
-            if ack_times = 0 or ack_times = 1 then
-                if scl_count = 8 then
-                    -- Prepare ACK: pull SDA low *before* the 9th rising edge
+            
+            if (i2c_cycle_count < 2) then
+                if (scl_count >= 8 and ack_times < 2) then
                     TMP_SDA <= '0';
                     scl_count <= 0;
                     tb_generate_ACK <= '1';
                     ack_times <= ack_times + 1;
-                else
-                    TMP_SDA <= 'H'; 
-                    tb_generate_ACK <= '0';
-                end if;
-            elsif ack_times = 2 then
-                if scl_count = 9 then
-                    -- Prepare ACK: pull SDA low *before* the 9th rising edge
+                elsif (scl_count >= 9 and ack_times = 2) then
                     TMP_SDA <= '0';
                     scl_count <= 0;
                     tb_generate_ACK <= '1';
                     ack_times <= ack_times + 1;
-                else
-                    TMP_SDA <= 'H'; 
-                    tb_generate_ACK <= '0';
-                end if;
-            elsif ack_times = 3 then
-                if scl_count = 17 then
+                elsif (scl_count >= 8 and ack_times = 3) then
+                    scl_count <= 0;
+                    ack_times <= ack_times + 1;  
+                elsif (scl_count >= 8 and ack_times = 4) then
+                    scl_count <= 0;
+                    ack_times <= ack_times + 1;
+                elsif (scl_count >= 0 and ack_times = 5) then
                     scl_count <= 0;
                     ack_times <= 0;
+                    i2c_cycle_count <= i2c_cycle_count + 1;
                 else
                     TMP_SDA <= 'H'; 
-                    tb_generate_ACK <= '0';
+                    tb_generate_ACK <= '0'; 
                 end if;
-            else
-                scl_count <= 0;
-                TMP_SDA <= 'H'; 
-                tb_generate_ACK <= '0';
+                
+                if (ack_times = 3 and scl_count < 8) then
+                    if (temp_value(15 - scl_count) = '1') then    
+                        TMP_SDA <= 'H';
+                        tb_generate_ACK <= 'H';
+                    else
+                        TMP_SDA <= '0';
+                        tb_generate_ACK <= '0';
+                    end if;
+                end if;
+                
+                if (ack_times = 4 and scl_count < 8) then
+                    if (temp_value(7 - scl_count) = '1') then    
+                        TMP_SDA <= 'H';
+                        tb_generate_ACK <= 'H';
+                    else
+                        TMP_SDA <= '0';
+                        tb_generate_ACK <= '0';
+                    end if;
+                end if;
             end if;
         end loop;
-    
+        
         -- Not reached unless you break from loop
         TbSimEnded <= '1';
         wait;
