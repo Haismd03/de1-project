@@ -40,6 +40,7 @@ entity ADT7420_driver is
         
         response_in : in std_logic_vector(15 downto 0);
         done_request : in std_logic;
+        i2c_error : in std_logic;
         
         address : out std_logic_vector(6 downto 0);
         read_write : out std_logic;
@@ -65,18 +66,11 @@ architecture Behavioral of ADT7420_driver is
 
     type state_t is (RESET_STATE, WAIT_FOR_START_STATE, REQUEST_TEMP_STATE, CONVERT_TEMP_STATE);
     signal state : state_t := RESET_STATE;
-    
-    signal latch_start : std_logic := '0';
 
 begin
-    p_adt7420_driver : process (clk, start) is
+    p_adt7420_driver : process (clk) is
     variable temp_temperature : integer := 0;
     begin
-    
-        if (start = '1') then
-            latch_start <= '1';
-        end if;
-    
         if(rising_edge(clk)) then
             if (rst = '1') then
                 state <= RESET_STATE;
@@ -105,8 +99,7 @@ begin
                     done_read <= RESET_LOGIC;
                     
                     -- next state
-                    if (latch_start = '1') then
-                        latch_start <= '0';
+                    if (start = '1') then
                         state <= REQUEST_TEMP_STATE;
                     end if;                              
                         
@@ -119,6 +112,8 @@ begin
                     -- next state
                     if (done_request = '1') then
                         state <= CONVERT_TEMP_STATE;
+                    elsif (i2c_error = '1') then
+                        state <= RESET_STATE;
                     end if;
                     
                 when CONVERT_TEMP_STATE =>
