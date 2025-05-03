@@ -87,7 +87,25 @@ architecture Behavioral of top_level is
       );
     end component clock_gen;
     
-    component I2C_module is
+--    component I2C_module is
+--        Port ( 
+--            address : in STD_LOGIC_VECTOR (6 downto 0);
+--            reg : in STD_LOGIC_VECTOR (7 downto 0);
+--            rw : in STD_LOGIC;
+--            num_bytes : in integer range 0 to 2;
+--            data : in STD_LOGIC_VECTOR (7 downto 0);
+--            clk : in STD_LOGIC; -- 400 kHz
+--            rst : in STD_LOGIC;
+--            done_master_read : in STD_LOGIC;
+--            SDA : inout  STD_LOGIC;
+--            SCL : out STD_LOGIC;
+--            response : out STD_LOGIC_VECTOR (15 downto 0);
+--            done : out STD_LOGIC;
+--            bit_error : out STD_LOGIC
+--        );
+--    end component I2C_module;
+
+    component I2C_driver is
         Port ( 
             address : in STD_LOGIC_VECTOR (6 downto 0);
             reg : in STD_LOGIC_VECTOR (7 downto 0);
@@ -103,8 +121,8 @@ architecture Behavioral of top_level is
             done : out STD_LOGIC;
             bit_error : out STD_LOGIC
         );
-    end component I2C_module;
-    
+    end component I2C_driver;
+
     component ADT7420_driver is
         port (
             clk : in std_logic;
@@ -113,6 +131,7 @@ architecture Behavioral of top_level is
             
             response_in : in std_logic_vector(15 downto 0);
             done_request : in std_logic;
+            i2c_error : in std_logic;
             
             address : out std_logic_vector(6 downto 0);
             read_write : out std_logic;
@@ -180,6 +199,7 @@ begin
             
             response_in => I2C_response,
             done_request => I2C_done_request,
+            i2c_error => I2C_error,
             
             address => I2C_ADT7420_address,
             read_write => I2C_read_write,
@@ -190,7 +210,25 @@ begin
             temperature => temperature
         );
         
-    I2C_driver : component I2C_module
+--    I2C_driver : component I2C_module
+--        port map ( 
+--            clk => clk_400_kHz, -- 400 kHz
+--            rst => BTNC,
+            
+--            address => I2C_ADT7420_address,
+--            rw => I2C_read_write,
+--            reg => I2C_register_address,        
+--            num_bytes => I2C_num_bytes,
+--            data => temp_I2C_data,
+--            SDA => TMP_SDA,
+--            SCL => TMP_SCL,
+--            response => I2C_response,
+--            done => I2C_done_request,
+--            done_master_read => I2C_done_read,
+--            bit_error => I2C_error
+--        );
+
+    I2C_control : component I2C_driver
         port map ( 
             clk => clk_400_kHz, -- 400 kHz
             rst => BTNC,
