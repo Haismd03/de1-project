@@ -142,16 +142,16 @@ architecture Behavioral of top_level is
         );
     end component ADT7420_driver;
     
---    component seg_drive is
---        Port (
---            clk : in STD_LOGIC;
---            rst : in STD_LOGIC;
---            inp : in INTEGER;
---            seg : out STD_LOGIC_VECTOR (6 downto 0);
---            an : out STD_LOGIC_VECTOR (7 downto 0);
---            dp : out STD_LOGIC
---        );
---    end component seg_drive;
+    component seg_drive is
+        Port (
+            clk : in STD_LOGIC;
+            rst : in STD_LOGIC;
+            inp : in INTEGER;
+            seg : out STD_LOGIC_VECTOR (6 downto 0);
+            an : out STD_LOGIC_VECTOR (7 downto 0);
+            dp : out STD_LOGIC
+        );
+    end component seg_drive;
     
     signal clk_400_kHz : std_logic;
     signal pulse_1_Hz : std_logic;
@@ -246,21 +246,21 @@ begin
             bit_error => I2C_error
         );
         
---    display : component seg_drive
---        port map (
---            clk => clk_400_kHz,
---            rst => BTNC,
---            inp => temperature,
---            seg(6) => CA,
---            seg(5) => CB,
---            seg(4) => CC,
---            seg(3) => CD,
---            seg(2) => CE,
---            seg(1) => CF,
---            seg(0) => CG,
---            an => AN,
---            dp => DP
---        );
+    display : component seg_drive
+        port map (
+            clk => clk_400_kHz,
+            rst => BTNC,
+            inp => temperature,
+            seg(6) => CA,
+            seg(5) => CB,
+            seg(4) => CC,
+            seg(3) => CD,
+            seg(2) => CE,
+            seg(1) => CF,
+            seg(0) => CG,
+            an => AN,
+            dp => DP
+        );
 
     LED16_G <= I2C_done_request;
     LED17_R <= I2C_error;
