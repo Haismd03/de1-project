@@ -19,7 +19,7 @@ architecture tb of tb_top_level is
         port (CLK100MHZ : in std_logic;
               BTNC      : in std_logic;
               TMP_SDA   : inout std_logic;
-              TMP_SCL   : out std_logic;
+              TMP_SCL   : inout std_logic;
               CA        : out std_logic;
               CB        : out std_logic;
               CC        : out std_logic;
