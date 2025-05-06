@@ -41,7 +41,7 @@ entity I2C_driver is
         clk : in STD_LOGIC; -- 400 kHz
         rst : in STD_LOGIC;
         SDA : inout  STD_LOGIC;
-        SCL : out STD_LOGIC;
+        SCL : inout STD_LOGIC;
         response : out STD_LOGIC_VECTOR (15 downto 0);
         done : out STD_LOGIC;
         done_master_read : in STD_LOGIC;

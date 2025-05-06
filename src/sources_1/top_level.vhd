@@ -45,7 +45,7 @@ entity top_level is
         
         -- ADT7420 I2C pins
         TMP_SDA : inout std_logic;
-        TMP_SCL : out std_logic;
+        TMP_SCL : inout std_logic;
         
         -- 7 segment display
         CA : out std_logic; --! Cathode of segment A
@@ -86,24 +86,6 @@ architecture Behavioral of top_level is
         pulse : out   std_logic  --! Clock enable pulse signal
       );
     end component clock_gen;
-    
---    component I2C_module is
---        Port ( 
---            address : in STD_LOGIC_VECTOR (6 downto 0);
---            reg : in STD_LOGIC_VECTOR (7 downto 0);
---            rw : in STD_LOGIC;
---            num_bytes : in integer range 0 to 2;
---            data : in STD_LOGIC_VECTOR (7 downto 0);
---            clk : in STD_LOGIC; -- 400 kHz
---            rst : in STD_LOGIC;
---            done_master_read : in STD_LOGIC;
---            SDA : inout  STD_LOGIC;
---            SCL : out STD_LOGIC;
---            response : out STD_LOGIC_VECTOR (15 downto 0);
---            done : out STD_LOGIC;
---            bit_error : out STD_LOGIC
---        );
---    end component I2C_module;
 
     component I2C_driver is
         Port ( 
@@ -116,7 +98,7 @@ architecture Behavioral of top_level is
             rst : in STD_LOGIC;
             done_master_read : in STD_LOGIC;
             SDA : inout  STD_LOGIC;
-            SCL : out STD_LOGIC;
+            SCL : inout STD_LOGIC;
             response : out STD_LOGIC_VECTOR (15 downto 0);
             done : out STD_LOGIC;
             bit_error : out STD_LOGIC
@@ -209,24 +191,6 @@ begin
             
             temperature => temperature
         );
-        
---    I2C_driver : component I2C_module
---        port map ( 
---            clk => clk_400_kHz, -- 400 kHz
---            rst => BTNC,
-            
---            address => I2C_ADT7420_address,
---            rw => I2C_read_write,
---            reg => I2C_register_address,        
---            num_bytes => I2C_num_bytes,
---            data => temp_I2C_data,
---            SDA => TMP_SDA,
---            SCL => TMP_SCL,
---            response => I2C_response,
---            done => I2C_done_request,
---            done_master_read => I2C_done_read,
---            bit_error => I2C_error
---        );
 
     I2C_control : component I2C_driver
         port map ( 
