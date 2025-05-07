@@ -55,13 +55,15 @@ architecture Behavioral of I2C_driver is
     signal SCL_drive : std_logic := 'Z';
     signal disable_auto_SCL : std_logic := '1';
     
+    signal error_signal : std_logic := '0';
+    
     signal counter : integer := 0;
     signal read_counter : integer := 0;
     
-    type state_type is (RESET, IDLE, START, ERROR, STOP,
+    type state_type is (RESET, IDLE, START, STOP,
                         SEND_ADDRESS_W, SEND_ADDRESS_R, SEND_REGISTER, SEND_ACK, SEND_NACK,
                         CHECK_ACK, READ_DATA,
-                        SEND_TO_MASTER, END_STATE);
+                        SEND_TO_MASTER);
     type state_array is array(integer range <>) of state_type;
 
     constant state_sequence : state_array := (
@@ -80,12 +82,12 @@ architecture Behavioral of I2C_driver is
         READ_DATA,
         SEND_NACK,
         STOP,
-        SEND_TO_MASTER, 
-        END_STATE -- last state -> reset when done
+        SEND_TO_MASTER -- last state -> reset when done
     );
 
     signal state : state_type := RESET;
     signal state_idx : integer := state_sequence'low;
+
 begin
     
     rising_process : process(clk)
@@ -103,7 +105,7 @@ begin
                     SCL_drive <= 'Z';  
                                
                     done <= '0';
-                    bit_error <= '0';
+                    error_signal <= '0';
                     response <= (others => '0');
                     
                     disable_auto_SCL <= '1';
@@ -160,7 +162,9 @@ begin
                         state <= state_sequence(state_idx);
                         state_idx <= state_idx + 1;
                     else
-                        state <= ERROR;
+                        error_signal <= '1';
+                        disable_auto_SCL <= '1';
+                        state <= STOP;
                     end if; 
                     
                 when SEND_REGISTER =>
@@ -197,7 +201,7 @@ begin
                     
                 WHEN SEND_NACK =>
                     state <= state_sequence(state_idx);
-                    state_idx <= state_idx + 1;   
+                    state_idx <= state_idx + 1;  
                  
                 WHEN STOP =>
                     if (counter = 0) then
@@ -207,26 +211,21 @@ begin
                         counter <= 0;
                         
                         disable_auto_SCL <= '1';
-                        state <= state_sequence(state_idx);
-                        state_idx <= state_idx + 1;
+                        state <= SEND_TO_MASTER;
+                        --state_idx <= state_idx + 1;
                     end if;
                     
                 WHEN SEND_TO_MASTER =>
-                    done <= '1';
-                    if (done_master_read = '1') then
-                        state <= state_sequence(state_idx);
-                        state_idx <= state_idx + 1;
+                    if (error_signal /= '1') then
+                        done <= '1';
+                        if (done_master_read = '1') then
+                            state <= RESET;
+                            state_idx <= state_sequence'low;
+                        end if;
+                    else
+                        state <= RESET;
+                        state_idx <= state_sequence'low;
                     end if;
-                    
-                WHEN END_STATE =>
-                    state <= RESET;
-                    state_idx <= state_sequence'low; 
-                    
-                when ERROR =>
-                    bit_error <= '1';
-                    disable_auto_SCL <= '1';
-                    state <= RESET;
-                    state_idx <= state_sequence'low;                 
                     
                 when others =>
                     -- do nothing
@@ -314,5 +313,6 @@ begin
     SCL <= SCL_drive;
     
     debug_in_process <= '1' when (state /= RESET and state /= IDLE) else '0';
+    bit_error <= error_signal;
 
 end Behavioral;
