@@ -60,14 +60,17 @@ entity top_level is
         
         -- LEDs
         LED16_G : out std_logic;
-        LED17_R : out std_logic
+        LED17_R : out std_logic;
+        LED16_B : out std_logic;
+        
+        JA_1 : out std_logic
     );
 end top_level;
 
 architecture Behavioral of top_level is
     component clock_enable is
         generic (
-            n_freq : integer -- 400 Khz
+            n_freq : integer
         );
         port (
             clk   : in    std_logic; --! Main clock
@@ -93,7 +96,6 @@ architecture Behavioral of top_level is
             reg : in STD_LOGIC_VECTOR (7 downto 0);
             rw : in STD_LOGIC;
             num_bytes : in integer range 0 to 2;
-            data : in STD_LOGIC_VECTOR (7 downto 0);
             clk : in STD_LOGIC; -- 400 kHz
             rst : in STD_LOGIC;
             done_master_read : in STD_LOGIC;
@@ -101,7 +103,9 @@ architecture Behavioral of top_level is
             SCL : inout STD_LOGIC;
             response : out STD_LOGIC_VECTOR (15 downto 0);
             done : out STD_LOGIC;
-            bit_error : out STD_LOGIC
+            bit_error : out STD_LOGIC;
+            
+            debug_in_process : out STD_LOGIC
         );
     end component I2C_driver;
 
@@ -146,11 +150,10 @@ architecture Behavioral of top_level is
     signal I2C_num_bytes : integer range 0 to 2;
     signal I2C_done_read : std_logic;
     signal I2C_error : std_logic;
+    signal I2C_in_process : std_logic;
     
     signal temperature : integer; -- in 10E4 °C
-    
-    -- temp signals
-    signal temp_I2C_data : STD_LOGIC_VECTOR (7 downto 0);
+
 begin
 
     I2C_clk : component clock_gen
@@ -201,13 +204,14 @@ begin
             rw => I2C_read_write,
             reg => I2C_register_address,        
             num_bytes => I2C_num_bytes,
-            data => temp_I2C_data,
             SDA => TMP_SDA,
             SCL => TMP_SCL,
             response => I2C_response,
             done => I2C_done_request,
             done_master_read => I2C_done_read,
-            bit_error => I2C_error
+            bit_error => I2C_error,
+            
+            debug_in_process => I2C_in_process
         );
         
     display : component seg_drive
@@ -228,5 +232,7 @@ begin
 
     LED16_G <= I2C_done_request;
     LED17_R <= I2C_error;
+    LED16_B <= pulse_1_Hz;
+    JA_1 <= I2C_in_process;
 
 end Behavioral;

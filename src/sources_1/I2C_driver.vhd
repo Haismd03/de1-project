@@ -37,7 +37,6 @@ entity I2C_driver is
         reg : in STD_LOGIC_VECTOR (7 downto 0); -- 0x00 => 0b00000000
         rw : in STD_LOGIC;
         num_bytes : in integer range 0 to 2;
-        data : in STD_LOGIC_VECTOR (7 downto 0);
         clk : in STD_LOGIC; -- 400 kHz
         rst : in STD_LOGIC;
         SDA : inout  STD_LOGIC;
@@ -45,7 +44,9 @@ entity I2C_driver is
         response : out STD_LOGIC_VECTOR (15 downto 0);
         done : out STD_LOGIC;
         done_master_read : in STD_LOGIC;
-        bit_error : out STD_LOGIC
+        bit_error : out STD_LOGIC;
+              
+        debug_in_process : out std_logic
     );
 end I2C_driver;
 
@@ -104,6 +105,8 @@ begin
                     done <= '0';
                     bit_error <= '0';
                     response <= (others => '0');
+                    
+                    disable_auto_SCL <= '1';
                     
                     counter <= 0;
                     read_counter <= 0;
@@ -221,6 +224,7 @@ begin
                     
                 when ERROR =>
                     bit_error <= '1';
+                    disable_auto_SCL <= '1';
                     state <= RESET;
                     state_idx <= state_sequence'low;                 
                     
@@ -308,5 +312,7 @@ begin
     
     SDA <= SDA_drive;
     SCL <= SCL_drive;
+    
+    debug_in_process <= '1' when (state /= RESET and state /= IDLE) else '0';
 
 end Behavioral;

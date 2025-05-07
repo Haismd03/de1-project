@@ -118,7 +118,7 @@ begin
                     num_bytes <= 2;
                     
                     latch_start <= '0';
-                    temperature <= RESET_INT;
+                    --temperature <= RESET_INT;
                     
                     -- next state
                     if (done_request = '1') then
