@@ -60,6 +60,8 @@ begin
                             if temp < 0 then
                                 seg <= "1111110";
                                 temp := -temp;
+                            else
+                                seg <= "1111111";
                             end if;
                             num <= temp; 
                             state <= state+1;
