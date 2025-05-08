@@ -21,9 +21,7 @@ This module works closely with I2C driver. Specific informations about temperatu
 
 <p align="center">
   <img src="img/ADT7420_flow_chart.png" width="400">
+  <img src="img/ADT7420_simulation.png">
 </p>
-
-![ADT7420 simulation](img/ADT7420_simulation.png)
-
 
 ### I2C driver
