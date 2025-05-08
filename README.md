@@ -15,7 +15,10 @@ This block uses a synchronous counter to toggle the output clock enable signal, 
 ![obrazek](https://github.com/user-attachments/assets/d9391c38-287d-4947-aad5-8336646387ec)
 
 ### Seg drive
+The seg drive module is a synchronous module used to dislplay meassured temperature using 7 out of 8 availiable 7-segment display units with non floating decimal point. Module is able to display values in range +-99.9999. 
 
+Input value is represented by integer value that contains actual value multiplied by 10^4 (e.g., 256365 for 25.6365). Module mathematically separates digits of input number and displays them on individual units using upgraded 7-segment driver from classes with 400 kHz refresh rate.
+![obrazek](img/SEG_DRIVE.png)
 ### ADT7420 driver
 
 ### I2C driver
