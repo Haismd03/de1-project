@@ -68,16 +68,6 @@ entity top_level is
 end top_level;
 
 architecture Behavioral of top_level is
-    component clock_enable is
-        generic (
-            n_freq : integer
-        );
-        port (
-            clk   : in    std_logic; --! Main clock
-            rst   : in    std_logic; --! High-active synchronous reset
-            pulse : out   std_logic  --! Clock enable pulse signal
-        );
-    end component clock_enable;
     
     component clock_gen is
       generic (
@@ -85,7 +75,6 @@ architecture Behavioral of top_level is
       );
       port (
         clk   : in    std_logic; --! Main clock
-        rst   : in    std_logic; --! High-active synchronous reset
         pulse : out   std_logic  --! Clock enable pulse signal
       );
     end component clock_gen;
@@ -138,7 +127,7 @@ architecture Behavioral of top_level is
     end component seg_drive;
     
     signal clk_400_kHz : std_logic;
-    signal pulse_1_Hz : std_logic;
+    signal clk_1_Hz : std_logic;
     
     signal I2C_response : std_logic_vector(15 downto 0);
     signal I2C_done_request : std_logic;
@@ -160,25 +149,23 @@ begin
         )
         port map (
             clk => CLK100MHZ,
-            rst => BTNC,
             pulse => clk_400_kHz
         );
         
-    start_pulse : component clock_enable
+    start_pulse : component clock_gen
         generic map ( 
             n_freq => START_CLK_FREQ
         )
         port map (
             clk => CLK100MHZ,
-            rst => BTNC,
-            pulse => pulse_1_Hz
+            pulse => clk_1_Hz
         );
         
     ADT_driver : component ADT7420_driver
         port map (
             clk => clk_400_kHz,
             rst => BTNC,
-            start => pulse_1_Hz,
+            start => clk_1_Hz,
             
             response_in => I2C_response,
             done_request => I2C_done_request,
@@ -228,7 +215,7 @@ begin
 
     LED16_G <= I2C_done_request;
     LED17_R <= I2C_error;
-    LED16_B <= pulse_1_Hz;
+    LED16_B <= clk_1_Hz;
     JA_1 <= I2C_in_process;
 
 end Behavioral;

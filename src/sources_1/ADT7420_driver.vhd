@@ -66,18 +66,21 @@ architecture Behavioral of ADT7420_driver is
     type state_t is (RESET_STATE, WAIT_FOR_START_STATE, REQUEST_TEMP_STATE, CONVERT_TEMP_STATE);
     signal state : state_t := RESET_STATE;
     
+    signal start_prev : std_logic := '0';
     signal latch_start : std_logic := '0';
 
 begin
-    p_adt7420_driver : process (clk, start) is
+    p_adt7420_driver : process (clk) is
     variable temp_temperature : integer := 0;
     begin
     
-        if (rising_edge(start)) then
-            latch_start <= '1';
-        end if;
-    
         if(rising_edge(clk)) then
+        
+            if (start = '1' and start_prev = '0') then
+                latch_start <= '1';
+            end if;
+            start_prev <= start;
+        
             if (rst = '1') then
                 state <= RESET_STATE;
             end if;

@@ -35,7 +35,6 @@ entity I2C_driver is
     Port ( 
         address : in STD_LOGIC_VECTOR (6 downto 0); -- 0x4B => 0b1001011
         reg : in STD_LOGIC_VECTOR (7 downto 0); -- 0x00 => 0b00000000
-        rw : in STD_LOGIC;
         num_bytes : in integer range 0 to 2;
         clk : in STD_LOGIC; -- 400 kHz
         rst : in STD_LOGIC;
@@ -56,6 +55,7 @@ architecture Behavioral of I2C_driver is
     signal disable_auto_SCL : std_logic := '1';
     
     signal error_signal : std_logic := '0';
+    signal reset_signal : std_logic := '0';
     
     signal counter : integer := 0;
     signal read_counter : integer := 0;
@@ -95,8 +95,9 @@ begin
     begin
         if (rising_edge(clk)) then
         
-            if (rst = '1') then               
-                state <= RESET;
+            if (rst = '1') then
+                reset_signal <= '1';               
+                state <= STOP;
             end if;  
         
             case state is
@@ -106,6 +107,7 @@ begin
                                
                     done <= '0';
                     error_signal <= '0';
+                    reset_signal <= '0';
                     response <= (others => '0');
                     
                     disable_auto_SCL <= '1';
@@ -163,7 +165,6 @@ begin
                         state_idx <= state_idx + 1;
                     else
                         error_signal <= '1';
-                        disable_auto_SCL <= '1';
                         state <= STOP;
                     end if; 
                     
@@ -204,25 +205,25 @@ begin
                     state_idx <= state_idx + 1;  
                  
                 WHEN STOP =>
-                    if (counter = 0) then
+                    if (counter < 1) then
                         disable_auto_SCL <= '1';
                         counter <= counter + 1;
                     else
                         counter <= 0;
                         
                         disable_auto_SCL <= '1';
-                        state <= SEND_TO_MASTER;
-                        --state_idx <= state_idx + 1;
-                    end if;
-                    
-                WHEN SEND_TO_MASTER =>
-                    if (error_signal /= '1') then
-                        done <= '1';
-                        if (done_master_read = '1') then
+                        if (error_signal = '1' or reset_signal = '1') then
                             state <= RESET;
                             state_idx <= state_sequence'low;
+                        else
+                            state <= state_sequence(state_idx);
+                            state_idx <= state_idx + 1;
                         end if;
-                    else
+                    end if;
+                    
+                WHEN SEND_TO_MASTER => -- last normal state
+                    done <= '1';
+                    if (done_master_read = '1') then
                         state <= RESET;
                         state_idx <= state_sequence'low;
                     end if;
@@ -294,18 +295,16 @@ begin
         end if;
     end process;
     
-    p_SCL_driver : process (clk)
+    p_SCL_driver : process (clk, disable_auto_SCL)
     begin
         if (disable_auto_SCL = '0') then
             if (clk = '1') then
-                SCL <= 'Z';
-            elsif (clk = '0') then
-                SCL <= '0';
+                SCL_drive <= 'Z';
             else
-                SCL <= '0'; -- Default fallback for not valid clk
+                SCL_drive <= '0';
             end if;
         else
-            SCL <= 'Z';
+            SCL_drive <= 'Z';
         end if;
     end process;
     
