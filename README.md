@@ -24,3 +24,7 @@ I2C driver establishes communication between ADT7420 driver and the sensor itsel
 - falling_process on the other hand based on conditional statements and iterative signals changes SDA_drive and SCL_drive signals between '0' a 'Z' ('Z' stands for released bus).
 - If a signal disable_auto_SCL is set to '0' p_SCL_driver updates the SCL_drive according to the signal from clock_gen, otherwise SCL is set to 'Z'.
 - SDA <= SDA_drive and SCL <= SCL_drive updates SDA and SCL outputs.
+
+![obrazek](img/I2C_simulation_part1.png)
+![obrazek](img/I2C_simulation_part2.png)
+![obrazek](img/I2C_driver_flowchart.drawio.png)
