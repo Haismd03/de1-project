@@ -7,6 +7,7 @@
 - When creating new sources, create then in `*\<project or repository name>\src\*` and **NOT** in default `<local to project>`
 
 ## Documentation
+This project implements an FPGA-based I2C communication system for reading temperature data from the ADT7420 and a display interface for real-time temperature visualization on a 7-segment display.
 
 ### Clock gen
 The clock_gen module generates a clock signal at a specified frequency by dividing a 100 MHz input clock. It outputs a signal that toggles at a 50% duty cycle, effectively producing a square wave at the desired frequency. This output is used as a timing signal (e.g., 400 kHz or 1 Hz) for other modules requiring a slower clock domain.
