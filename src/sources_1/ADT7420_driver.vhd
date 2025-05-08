@@ -43,7 +43,6 @@ entity ADT7420_driver is
         i2c_error : in std_logic;
         
         address : out std_logic_vector(6 downto 0);
-        read_write : out std_logic;
         register_address : out std_logic_vector(7 downto 0);
         num_bytes : out integer range 0 to 2;
         temperature : out integer;
@@ -86,7 +85,6 @@ begin
             case state is
                 when RESET_STATE => -- reset
                     address <= (others => RESET_LOGIC);
-                    read_write <= RESET_LOGIC;
                     register_address <= (others => RESET_LOGIC);
                     num_bytes <= RESET_INT;
                     done_read <= RESET_LOGIC;
@@ -101,7 +99,6 @@ begin
                     
                 when WAIT_FOR_START_STATE =>
                     address <= (others => RESET_LOGIC);
-                    read_write <= RESET_LOGIC;
                     register_address <= (others => RESET_LOGIC);
                     num_bytes <= RESET_INT;
                     done_read <= RESET_LOGIC;
@@ -113,7 +110,6 @@ begin
                         
                 when REQUEST_TEMP_STATE =>
                     address <= std_logic_vector(to_unsigned(16#4B#, 7)); -- I2C address
-                    read_write <= READ;
                     register_address <= TEMP_REGISTER;
                     num_bytes <= 2;
                     

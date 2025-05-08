@@ -94,7 +94,6 @@ architecture Behavioral of top_level is
         Port ( 
             address : in STD_LOGIC_VECTOR (6 downto 0);
             reg : in STD_LOGIC_VECTOR (7 downto 0);
-            rw : in STD_LOGIC;
             num_bytes : in integer range 0 to 2;
             clk : in STD_LOGIC; -- 400 kHz
             rst : in STD_LOGIC;
@@ -120,7 +119,6 @@ architecture Behavioral of top_level is
             i2c_error : in std_logic;
             
             address : out std_logic_vector(6 downto 0);
-            read_write : out std_logic;
             register_address : out std_logic_vector(7 downto 0);
             num_bytes : out integer range 0 to 2;
             temperature : out integer;
@@ -187,7 +185,6 @@ begin
             i2c_error => I2C_error,
             
             address => I2C_ADT7420_address,
-            read_write => I2C_read_write,
             register_address => I2C_register_address,
             num_bytes => I2C_num_bytes,
             done_read => I2C_done_read,
@@ -201,7 +198,6 @@ begin
             rst => BTNC,
             
             address => I2C_ADT7420_address,
-            rw => I2C_read_write,
             reg => I2C_register_address,        
             num_bytes => I2C_num_bytes,
             SDA => TMP_SDA,
