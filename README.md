@@ -16,16 +16,6 @@ This block uses a synchronous counter to toggle the output clock enable signal, 
 ![obrazek](https://github.com/user-attachments/assets/a21dc6ec-d4ab-461e-a6ac-ef1ee7049a47)
 ![obrazek](https://github.com/user-attachments/assets/d9391c38-287d-4947-aad5-8336646387ec)
 
-### [Seg drive](https://github.com/Haismd03/de1-project/blob/main/src/sources_1/seg_drive.vhd)
-The seg drive module is a synchronous module used to dislplay meassured temperature using 7 out of 8 availiable 7-segment display units with non floating decimal point. Module is able to display values in range +-99.9999. 
-
-Input value is represented by integer value that contains actual value multiplied by 10^4 (e.g., 256365 for 25.6365). Module mathematically separates digits of input number and displays them on individual units using upgraded 7-segment driver from classes with 400 kHz refresh rate.
-<p align="center">
-  <img src="/img/SEG_DRIVE.png" width="400">
-  <img src="/img/Segment_simulation.png">
-</p>
-
-
 ### [ADT7420 driver](https://github.com/Haismd03/de1-project/blob/main/src/sources_1/ADT7420_driver.vhd)
 This module works closely with I2C driver. Specific informations about temperature sensor ADT7420 including I2C address, register value and state-machine necessary for optaining desired information is stored in this module. 
 
@@ -46,6 +36,7 @@ I2C driver establishes communication between ADT7420 driver and the sensor itsel
 - If a signal disable_auto_SCL is set to '0' p_SCL_driver updates the SCL_drive according to the signal from clock_gen, otherwise SCL is set to 'Z'.
 - Collaterally to these processes inouts SDA and SCL are updated from signals SCL_drive and SDA_drive.
 The correct sequence of the FSM is stored in the array 'state_sequence'.
+- SDA <= SDA_drive and SCL <= SCL_drive updates SDA and SCL outputs.
 
 #### Successfull communication
 1. 'Reset' is set to be always the first state in the FSM. 'Reset' state generally lasts untill the push button on the Nexys_a7_50T is not being pushed anymore so the 'rst' is low.
@@ -65,4 +56,11 @@ The correct sequence of the FSM is stored in the array 'state_sequence'.
 #### Flowchart
 ![obrazek](img/I2C_driver_flowchart.drawio_light.png)
 
+### [Seg drive](https://github.com/Haismd03/de1-project/blob/main/src/sources_1/seg_drive.vhd)
+The seg drive module is a synchronous module used to dislplay meassured temperature using 7 out of 8 availiable 7-segment display units with non floating decimal point. Module is able to display values in range +-99.9999. 
 
+Input value is represented by integer value that contains actual value multiplied by 10^4 (e.g., 256365 for 25.6365). Module mathematically separates digits of input number and displays them on individual units using upgraded 7-segment driver from classes with 400 kHz refresh rate.
+<p align="center">
+  <img src="/img/SEG_DRIVE.png" width="400">
+  <img src="/img/Segment_simulation.png">
+</p>
