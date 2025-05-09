@@ -20,6 +20,7 @@ The seg drive module is a synchronous module used to dislplay meassured temperat
 Input value is represented by integer value that contains actual value multiplied by 10^4 (e.g., 256365 for 25.6365). Module mathematically separates digits of input number and displays them on individual units using upgraded 7-segment driver from classes with 400 kHz refresh rate.
 <p align="center">
   <img src="/img/SEG_DRIVE.png" width="400">
+  <img src="/img/Segment_simulation.png">
 </p>
 
 ### ADT7420 driver
