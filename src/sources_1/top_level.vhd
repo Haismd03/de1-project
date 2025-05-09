@@ -63,6 +63,7 @@ entity top_level is
         LED17_R : out std_logic;
         LED16_B : out std_logic;
         
+        -- debug
         JA_1 : out std_logic
     );
 end top_level;
@@ -216,6 +217,8 @@ begin
     LED16_G <= I2C_done_request;
     LED17_R <= I2C_error;
     LED16_B <= clk_1_Hz;
+    
+    -- debug
     JA_1 <= I2C_in_process;
 
 end Behavioral;
