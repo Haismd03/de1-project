@@ -54,7 +54,7 @@ The correct sequence of the FSM is stored in the array 'state_sequence'.
 
 ![obrazek](img/I2C_simulation_part2.png)
 #### Flowchart
-![obrazek](img/I2C_driver_flowchart.drawio_light.png)
+![obrazek](img/I2C_driver_flowchart_light.drawio.png)
 
 ### [Seg drive](https://github.com/Haismd03/de1-project/blob/main/src/sources_1/seg_drive.vhd)
 The seg drive module is a synchronous module used to dislplay meassured temperature using 7 out of 8 availiable 7-segment display units with non floating decimal point. Module is able to display values in range +-99.9999. 
