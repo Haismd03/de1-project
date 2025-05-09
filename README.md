@@ -48,21 +48,21 @@ I2C driver establishes communication between ADT7420 driver and the sensor itsel
 The correct sequence of the FSM is stored in the array 'state_sequence'.
 
 #### Successfull communication
-1. 'Reset' is set to be always the first state in the FSM. 'Reset' state generally lasts untill the push button on the Nexys_a7_50T is not being pushed anymore so the 'rst' is low.
-2. I2C_driver is in 'Idle' state untill receiving any data from ADT7420_driver, which is tested by condition 'num_bytes /= '0''.
-3. 'Start_condition' is defined as  high-to-low transition on 'SDA' while 'SCL' remains high. Note that only in start/stop condition SDA doesnt change on falling edge.
-4. 'Send_address_w' is processed in both rising and falling processes. In rising_process on rising edges there is an internal signal 'counter' that increases every clock period. On the other hand in falling_process we utilize the increasing 'counter' for indexing an appropriate bit in the 'address' 7-bit input vector. There is also a convertor for converting logic '1' to released bud 'Z'. 'w' in the name of this state stands for write bit ('0') which is the last bit in the 8-bit frame. 
-5. After sending address there is a state 'Check_ack', which detects whether the sensor send acknowledge ('0') or not ('Z'). If the sensor didnt send the ack, signal 'error_signal' is set to '1' and the next state is 'stop', otherwise its 'Send_register'.
-6. Note that for 'Send_register' is used the same logic as for the 'Send_address_w' state except the reg input vector is 8-bit and we dont deal with that last bit must be set to '0'.
-7. Next follows 'Check_ack' state again and then 'Start' - no differences.
-8. 'Send_address_r' is the same as with the 'w' except 'r' as a read bit stands for 'Z'. Last 'Check_ack' follows.
-9. As 'Check_ack' state 'Read_data' is only in rising_process, because we need to read the data on rising_edge. At first the 'read_size' variable is set according to signals 'num_bytes' and 'read_counter'. 'read_size' represents the length of the response vector - 1 (at the beginning it should be 15 or 7). 'H' in the logic convertor means weak-pull-up.
+1. `Reset` is set to be always the first state in the FSM. 'Reset' state generally lasts untill the push button on the Nexys_a7_50T is not being pushed anymore so the `rst` is low.
+2. I2C_driver is in `Idle` state untill receiving any data from ADT7420_driver, which is tested by condition `num_bytes /= '0'`.
+3. 'Start_condition' is defined as  high-to-low transition on 'SDA' while `SCL` remains high. Note that only in start/stop condition SDA doesnt change on falling edge.
+4. `Send_address_w` is processed in both rising and falling processes. In rising_process on rising edges there is an internal signal `counter` that increases every clock period. On the other hand in falling_process we utilize the increasing 'counter' for indexing an appropriate bit in the 'address' 7-bit input vector. There is also a convertor for converting logic '1' to released bus `Z`. `w` in the name of this state stands for write bit ('0') which is the last bit in the 8-bit frame. 
+5. After sending address there is a state `Check_ack`, which detects whether the sensor send acknowledge ('0') or not ('Z'). If the sensor didnt send the ack, signal `error_signal` is set to '1' and the next state is `stop`, otherwise its `Send_register`.
+6. Note that for `Send_register` is used the same logic as for the `Send_address_w` state except the reg input vector is 8-bit and we dont deal with that last bit must be set to '0'.
+7. Next follows `Check_ack` state again and then `Start` - no differences.
+8. `Send_address_r` is the same as with the `w` except `r` as a read bit stands for `Z`. Last `Check_ack` follows.
+9. As `Check_ack` state `Read_data` is only in rising_process, because we need to read the data on rising_edge. At first the `read_size` variable is set according to signals `num_bytes` and `read_counter`. `read_size` represents the length of the response vector - 1 (at the beginning it should be 15 or 7). 'H' in the logic convertor means weak-pull-up.
 10.  
 ![obrazek](img/I2C_simulation_part1.png)
 #### Nack from ADT7420
 
 ![obrazek](img/I2C_simulation_part2.png)
 #### Flowchart
-![obrazek](img/I2C_driver_flowchart.drawio_light.png)
+![obrazek](img/I2C_driver_flowchart_light.drawio.png)
 
 
