@@ -51,6 +51,7 @@ begin
                     seg <= "1111111";
                     dp  <= '1';
                     an <= "00000000";
+                    state <= 0;
                 else
                     case state is
                         when 0 =>
