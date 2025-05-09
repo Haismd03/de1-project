@@ -9,6 +9,10 @@
 ## Documentation
 This project implements an FPGA-based I2C communication system for reading temperature data from the ADT7420 and a display interface for real-time temperature visualization on a 7-segment display.
 
+<p align="center">
+  <img src="img/TOP_LEVEL.png">
+</p>
+
 ### Clock gen
 The clock_gen module generates a clock signal at a specified frequency by dividing a 100 MHz input clock. It outputs a signal that toggles at a 50% duty cycle, effectively producing a square wave at the desired frequency. This output is used as a timing signal (e.g., 400 kHz or 1 Hz) for other modules requiring a slower clock domain.
 This block uses a synchronous counter to toggle the output clock enable signal, and it does not have an external reset.
