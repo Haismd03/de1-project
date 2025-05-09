@@ -7,6 +7,8 @@ This project implements an FPGA-based I2C communication system for reading tempe
   <img src="img/TOP_LEVEL.png">
 </p>
 
+![osc](img/scope_funkcni.png)
+
 ### [Clock gen](https://github.com/Haismd03/de1-project/blob/main/src/sources_1/clock_gen.vhd)
 The clock_gen module generates a clock signal at a specified frequency by dividing a 100 MHz input clock. It outputs a signal that toggles at a 50% duty cycle, effectively producing a square wave at the desired frequency. This output is used as a timing signal (e.g., 400 kHz or 1 Hz) for other modules requiring a slower clock domain.
 
@@ -61,6 +63,6 @@ The correct sequence of the FSM is stored in the array 'state_sequence'.
 
 ![obrazek](img/I2C_simulation_part2.png)
 #### Flowchart
-![obrazek](img/I2C_driver_flowchart.drawio.png)
+![obrazek](img/I2C_driver_flowchart.drawio_light.png)
 
 
