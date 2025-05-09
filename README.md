@@ -14,15 +14,6 @@ This block uses a synchronous counter to toggle the output clock enable signal, 
 ![obrazek](https://github.com/user-attachments/assets/a21dc6ec-d4ab-461e-a6ac-ef1ee7049a47)
 ![obrazek](https://github.com/user-attachments/assets/d9391c38-287d-4947-aad5-8336646387ec)
 
-### Seg drive
-The seg drive module is a synchronous module used to dislplay meassured temperature using 7 out of 8 availiable 7-segment display units with non floating decimal point. Module is able to display values in range +-99.9999. 
-
-Input value is represented by integer value that contains actual value multiplied by 10^4 (e.g., 256365 for 25.6365). Module mathematically separates digits of input number and displays them on individual units using upgraded 7-segment driver from classes with 400 kHz refresh rate.
-<p align="center">
-  <img src="/img/SEG_DRIVE.png" width="400">
-  <img src="/img/Segment_simulation.png">
-</p>
-
 ### ADT7420 driver
 This module works closely with I2C driver. Specific informations about temperature sensor ADT7420 including I2C address, register value and state-machine necessary for optaining desired information is stored in this module. 
 
@@ -42,3 +33,12 @@ I2C driver establishes communication between ADT7420 driver and the sensor itsel
 - falling_process on the other hand based on conditional statements and iterative signals changes SDA_drive and SCL_drive signals between '0' a 'Z' ('Z' stands for released bus).
 - If a signal disable_auto_SCL is set to '0' p_SCL_driver updates the SCL_drive according to the signal from clock_gen, otherwise SCL is set to 'Z'.
 - SDA <= SDA_drive and SCL <= SCL_drive updates SDA and SCL outputs.
+
+### Seg drive
+The seg drive module is a synchronous module used to dislplay meassured temperature using 7 out of 8 availiable 7-segment display units with non floating decimal point. Module is able to display values in range +-99.9999. 
+
+Input value is represented by integer value that contains actual value multiplied by 10^4 (e.g., 256365 for 25.6365). Module mathematically separates digits of input number and displays them on individual units using upgraded 7-segment driver from classes with 400 kHz refresh rate.
+<p align="center">
+  <img src="/img/SEG_DRIVE.png" width="400">
+  <img src="/img/Segment_simulation.png">
+</p>
