@@ -16,6 +16,7 @@ This block uses a synchronous counter to toggle the output clock enable signal, 
 
 ### Seg drive
 
+
 ### ADT7420 driver
 
 ### I2C driver
@@ -27,9 +28,6 @@ I2C driver establishes communication between ADT7420 driver and the sensor itsel
 The correct sequence of the FSM is stored in the array 'state_sequence'.
 
 #### Successfull communication
-
-![obrazek](img/I2C_simulation_part1.png)
-#### Nack from ADT7420
 1. 'Reset' is set to be always the first state in the FSM. 'Reset' state generally lasts untill the push button on the Nexys_a7_50T is not being pushed anymore so the 'rst' is low.
 2. I2C_driver is in 'Idle' state untill receiving any data from ADT7420_driver, which is tested by condition 'num_bytes /= '0''.
 3. 'Start_condition' is defined as  high-to-low transition on 'SDA' while 'SCL' remains high. Note that only in start/stop condition SDA doesnt change on falling edge.
@@ -40,6 +38,9 @@ The correct sequence of the FSM is stored in the array 'state_sequence'.
 8. 'Send_address_r' is the same as with the 'w' except 'r' as a read bit stands for 'Z'. Last 'Check_ack' follows.
 9. As 'Check_ack' state 'Read_data' is only in rising_process, because we need to read the data on rising_edge. At first the 'read_size' variable is set according to signals 'num_bytes' and 'read_counter'. 'read_size' represents the length of the response vector - 1 (at the beginning it should be 15 or 7). 'H' in the logic convertor means weak-pull-up.
 10.  
+![obrazek](img/I2C_simulation_part1.png)
+#### Nack from ADT7420
+
 ![obrazek](img/I2C_simulation_part2.png)
 #### Flowchart
 ![obrazek](img/I2C_driver_flowchart.drawio.png)
