@@ -86,14 +86,13 @@ begin
     stimuli : process
     begin
     
-        -- Reset sequence
-        BTNC <= '1';
-        wait for 100 ns;
-        BTNC <= '0';
-        wait for 100 ns;
-        
         TMP_SDA <= 'H';
         TMP_SCL <= 'H';
+    
+        -- Reset sequence
+        BTNC <= '1';
+        wait for 8 us;
+        BTNC <= '0';
         
         temp_value <= b"0000110010000111";
 
